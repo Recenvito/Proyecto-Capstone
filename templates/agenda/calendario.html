@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block titulo %}Agenda{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Agenda</h1>
+    <p class="subtitulo">{{ dia|date:"l j \d\e F \d\e Y" }}
+      {% if profesional %}&middot; {{ profesional.get_full_name|default:profesional.username }}{% endif %}</p>
+  </div>
+  <a href="{% url 'agenda:agendar' %}" class="boton">+ Agendar hora</a>
+</div>
+
+<div class="tarjeta">
+  <form method="get" class="navegacion-fecha">
+    <a href="?fecha={{ dia_anterior|date:'Y-m-d' }}{% if profesional %}&profesional={{ profesional.pk }}{% endif %}"
+       class="boton boton-chico boton-secundario">&larr; Dia anterior</a>
+
+    <input type="date" name="fecha" value="{{ dia|date:'Y-m-d' }}" class="input" style="width:auto">
+
+    {% if medicos|length > 1 %}
+      <select name="profesional" class="input" style="width:auto">
+        {% for m in medicos %}
+          <option value="{{ m.pk }}" {% if profesional.pk == m.pk %}selected{% endif %}>
+            {{ m.get_full_name|default:m.username }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+
+    <button type="submit" class="boton boton-chico">Ver</button>
+
+    <a href="?fecha={{ dia_siguiente|date:'Y-m-d' }}{% if profesional %}&profesional={{ profesional.pk }}{% endif %}"
+       class="boton boton-chico boton-secundario">Dia siguiente &rarr;</a>
+
+    {% if dia != hoy %}
+      <a href="{% url 'agenda:calendario' %}" class="boton boton-chico boton-secundario">Hoy</a>
+    {% endif %}
+
+    <span style="margin-left:auto;font-size:13px;color:var(--texto-suave)">
+      {{ ocupados }} ocupado{{ ocupados|pluralize }} &middot; {{ libres }} libre{{ libres|pluralize }}
+    </span>
+  </form>
+</div>
+
+{% if not profesional %}
+  <div class="tarjeta"><p class="vacio">
+    No hay ningun profesional medico registrado todavia.
+    Crealo desde <a href="/admin/usuarios/usuario/add/">Administracion &rarr; Usuarios</a>.
+  </p></div>
+{% elif bloques %}
+  {% for bloque in bloques %}
+    <div class="bloque {% if not bloque.cita %}libre{% endif %}">
+      <div class="hora">{{ bloque.hora|date:"H:i" }}</div>
+
+      {% if bloque.cita %}
+        <div class="info">
+          <div class="nombre">
+            <a href="{% url 'pacientes:detalle' bloque.cita.paciente.pk %}">
+              {{ bloque.cita.paciente.nombre_completo }}</a>
+          </div>
+          <div class="detalle">
+            {{ bloque.cita.paciente.edad_texto }} &middot;
+            {{ bloque.cita.get_tipo_display }}
+            {% if bloque.cita.motivo %}&middot; {{ bloque.cita.motivo|truncatechars:50 }}{% endif %}
+          </div>
+        </div>
+        <div class="acciones-bloque">
+          <span class="estado estado-{{ bloque.cita.estado }}">{{ bloque.cita.get_estado_display }}</span>
+          <form method="post" action="{% url 'agenda:cambiar_estado' bloque.cita.pk %}"
+                style="display:flex;gap:6px">
+            {% csrf_token %}
+            <select name="estado" class="input" style="width:auto;font-size:13px;padding:4px 8px">
+              {% for valor, texto in bloque.cita.Estado.choices %}
+                <option value="{{ valor }}" {% if bloque.cita.estado == valor %}selected{% endif %}>
+                  {{ texto }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="boton boton-chico boton-secundario">Cambiar</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="info"><span style="color:var(--texto-suave)">Disponible
+          {% if bloque.lugar %}&middot; {{ bloque.lugar }}{% endif %}</span></div>
+        <div class="acciones-bloque">
+          <a class="boton boton-chico"
+             href="{% url 'agenda:agendar' %}?hora={{ bloque.hora|date:'Y-m-d\TH:i' }}&profesional={{ profesional.pk }}">
+            Agendar</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="tarjeta"><p class="vacio">
+    {{ profesional.get_full_name|default:profesional.username }} no tiene horario de atencion
+    definido para este dia.<br>
+    Configuralo en <a href="/admin/agenda/disponibilidad/add/">Administracion &rarr; Disponibilidades</a>.
+  </p></div>
+{% endif %}
+{% endblock %}

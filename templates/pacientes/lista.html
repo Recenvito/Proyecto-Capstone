@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block titulo %}Pacientes{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Pacientes</h1>
+    <p class="subtitulo">{{ total }} paciente{{ total|pluralize }} activo{{ total|pluralize }}</p>
+  </div>
+  <a href="{% url 'pacientes:crear' %}" class="boton">+ Nuevo paciente</a>
+</div>
+
+<div class="tarjeta">
+  <form method="get" style="display:flex;gap:10px;margin-bottom:18px">
+    <input type="text" name="q" class="input" value="{{ busqueda }}"
+           placeholder="Buscar por nombre o RUT..." autofocus>
+    <button type="submit" class="boton">Buscar</button>
+    {% if busqueda %}<a href="{% url 'pacientes:lista' %}" class="boton boton-secundario">Limpiar</a>{% endif %}
+  </form>
+
+  {% if pacientes %}
+  <table>
+    <thead>
+      <tr><th>RUT</th><th>Nombre</th><th>Edad</th><th>Prevision</th><th>Tutor principal</th></tr>
+    </thead>
+    <tbody>
+    {% for p in pacientes %}
+      <tr>
+        <td>{{ p.rut }}</td>
+        <td><a href="{% url 'pacientes:detalle' p.pk %}"><strong>{{ p.nombre_completo }}</strong></a></td>
+        <td>{{ p.edad_texto }}</td>
+        <td>{{ p.get_prevision_display }}</td>
+        <td>
+          {% with t=p.tutor_principal %}
+            {% if t %}{{ t.nombre_completo }}<br>
+              <span style="font-size:12px;color:var(--texto-suave)">{{ t.telefono }}</span>
+            {% else %}<span style="color:var(--texto-suave)">Sin tutor registrado</span>{% endif %}
+          {% endwith %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="vacio">
+      {% if busqueda %}No se encontraron pacientes para "{{ busqueda }}".
+      {% else %}Aun no hay pacientes registrados.{% endif %}
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

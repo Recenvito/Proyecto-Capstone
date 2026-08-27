@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block titulo %}Inicio{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Hola, {{ user.first_name|default:user.username }}</h1>
+    <p class="subtitulo">Resumen de hoy, {{ hoy|date:"l j \d\e F \d\e Y" }}</p>
+  </div>
+  <div class="acciones" style="margin:0">
+    <a href="{% url 'agenda:agendar' %}" class="boton">+ Agendar hora</a>
+    <a href="{% url 'pacientes:crear' %}" class="boton boton-secundario">+ Nuevo paciente</a>
+  </div>
+</div>
+
+<div class="grid grid-3" style="margin-bottom:24px">
+  <div class="indicador">
+    <div class="numero">{{ citas_hoy|length }}</div>
+    <div class="etiqueta">Horas agendadas hoy</div>
+  </div>
+  <div class="indicador">
+    <div class="numero">{{ atendidas_hoy }}</div>
+    <div class="etiqueta">Pacientes atendidos hoy</div>
+  </div>
+  <div class="indicador">
+    <div class="numero">{{ total_pacientes }}</div>
+    <div class="etiqueta">Pacientes activos</div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="tarjeta">
+    <h2>Agenda de hoy</h2>
+    {% if citas_hoy %}
+      <table>
+        <tbody>
+        {% for cita in citas_hoy %}
+          <tr>
+            <td style="width:60px"><strong>{{ cita.fecha_hora|date:"H:i" }}</strong></td>
+            <td>
+              <a href="{% url 'pacientes:detalle' cita.paciente.pk %}">
+                {{ cita.paciente.nombre_completo }}</a>
+              <div style="font-size:13px;color:var(--texto-suave)">
+                {{ cita.paciente.edad_texto }} &middot; {{ cita.get_tipo_display }}</div>
+            </td>
+            <td style="text-align:right">
+              <span class="estado estado-{{ cita.estado }}">{{ cita.get_estado_display }}</span>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="vacio">No hay horas agendadas para hoy.</p>
+    {% endif %}
+  </div>
+
+  <div class="tarjeta">
+    <h2>Proximos 7 dias</h2>
+    {% if proximas %}
+      <table>
+        <tbody>
+        {% for cita in proximas %}
+          <tr>
+            <td style="width:110px">
+              <strong>{{ cita.fecha_hora|date:"D j/n" }}</strong>
+              {{ cita.fecha_hora|date:"H:i" }}
+            </td>
+            <td><a href="{% url 'pacientes:detalle' cita.paciente.pk %}">
+              {{ cita.paciente.nombre_completo }}</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="vacio">Sin horas agendadas esta semana.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

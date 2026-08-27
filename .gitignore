@@ -1,0 +1,27 @@
+# Entorno virtual de Python
+venv/
+env/
+
+# Variables de entorno con credenciales  <-- IMPORTANTE, nunca subir
+.env
+
+# Base de datos local
+db.sqlite3
+*.sqlite3
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+
+# Wallet de Oracle Cloud (contiene credenciales)
+wallet/
+*.zip
+
+# Archivos estaticos recolectados
+staticfiles/
+media/
+
+# Sistema operativo / editor
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ paciente.nombre_completo }}{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>{{ paciente.nombre_completo }}</h1>
+    <p class="subtitulo">
+      {{ paciente.rut }} &middot; {{ paciente.edad_texto }} &middot;
+      {{ paciente.get_sexo_display }} &middot; {{ paciente.get_prevision_display }}
+    </p>
+  </div>
+  <div class="acciones" style="margin:0">
+    {% if user.puede_ver_ficha_clinica %}
+      <a href="{% url 'pacientes:crear_atencion' paciente.pk %}" class="boton boton-verde">
+        + Registrar atencion</a>
+    {% endif %}
+    <a href="/agenda/agendar/?paciente={{ paciente.pk }}" class="boton">+ Agendar hora</a>
+    <a href="{% url 'pacientes:editar' paciente.pk %}" class="boton boton-secundario">Editar</a>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h3>Datos del paciente</h3>
+  <div class="datos">
+    <div class="dato"><div class="etiqueta">Fecha de nacimiento</div>
+      <div class="valor">{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</div></div>
+    <div class="dato"><div class="etiqueta">Direccion</div>
+      <div class="valor">{{ paciente.direccion|default:"—" }}{% if paciente.comuna %}, {{ paciente.comuna }}{% endif %}</div></div>
+    <div class="dato"><div class="etiqueta">Colegio</div>
+      <div class="valor">{{ paciente.colegio|default:"—" }}{% if paciente.curso %} ({{ paciente.curso }}){% endif %}</div></div>
+    <div class="dato"><div class="etiqueta">Derivado por</div>
+      <div class="valor">{{ paciente.derivado_por|default:"—" }}</div></div>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h3>Tutores / Apoderados</h3>
+  {% if tutores %}
+    <table>
+      <thead><tr><th>Nombre</th><th>Parentesco</th><th>Telefono</th><th>Email</th><th></th></tr></thead>
+      <tbody>
+      {% for t in tutores %}
+        <tr>
+          <td><strong>{{ t.nombre_completo }}</strong></td>
+          <td>{{ t.get_parentesco_display }}</td>
+          <td>{{ t.telefono }}</td>
+          <td>{{ t.email|default:"—" }}</td>
+          <td>{% if t.es_principal %}<span class="estado estado-CONFIRMADA">Principal</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}<p class="vacio">Sin tutores registrados.</p>{% endif %}
+</div>
+
+{% if user.puede_ver_ficha_clinica %}
+
+  <div class="tarjeta">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="margin:0">Antecedentes neurologicos</h3>
+      <a href="{% url 'pacientes:antecedentes' paciente.pk %}"
+         class="boton boton-chico boton-secundario">Editar</a>
+    </div>
+    {% if antecedentes %}
+      <div class="datos">
+        <div class="dato"><div class="etiqueta">Semanas de gestacion</div>
+          <div class="valor">{{ antecedentes.semanas_gestacion|default:"—" }}</div></div>
+        <div class="dato"><div class="etiqueta">Peso al nacer</div>
+          <div class="valor">{% if antecedentes.peso_nacimiento_gramos %}{{ antecedentes.peso_nacimiento_gramos }} g{% else %}—{% endif %}</div></div>
+        <div class="dato"><div class="etiqueta">Tipo de parto</div>
+          <div class="valor">{{ antecedentes.get_tipo_parto_display }}</div></div>
+        <div class="dato"><div class="etiqueta">Camino solo</div>
+          <div class="valor">{% if antecedentes.edad_marcha %}{{ antecedentes.edad_marcha }} meses{% else %}—{% endif %}</div></div>
+        <div class="dato"><div class="etiqueta">Primeras palabras</div>
+          <div class="valor">{% if antecedentes.edad_primeras_palabras %}{{ antecedentes.edad_primeras_palabras }} meses{% else %}—{% endif %}</div></div>
+        <div class="dato"><div class="etiqueta">Alergias</div>
+          <div class="valor">{{ antecedentes.alergias|default:"—" }}</div></div>
+      </div>
+      {% if antecedentes.medicamentos_actuales %}
+        <p style="margin-top:14px"><strong>Medicamentos en uso:</strong>
+          {{ antecedentes.medicamentos_actuales }}</p>
+      {% endif %}
+    {% else %}<p class="vacio">Sin antecedentes registrados.</p>{% endif %}
+  </div>
+
+  <div class="tarjeta">
+    <h3>Diagnosticos</h3>
+    {% if diagnosticos %}
+      <table>
+        <thead><tr><th>Diagnostico</th><th>CIE-10</th><th>Fecha</th><th>Estado</th></tr></thead>
+        <tbody>
+        {% for d in diagnosticos %}
+          <tr>
+            <td>{{ d.descripcion }}</td>
+            <td>{{ d.codigo_cie10|default:"—" }}</td>
+            <td>{{ d.fecha_diagnostico|date:"d/m/Y" }}</td>
+            <td><span class="estado estado-{{ d.estado }}">{{ d.get_estado_display }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}<p class="vacio">Sin diagnosticos registrados.</p>{% endif %}
+  </div>
+
+  <div class="tarjeta">
+    <h3>Historial de atenciones</h3>
+    {% if atenciones %}
+      <table>
+        <thead><tr><th>Fecha</th><th>Motivo</th><th>Impresion diagnostica</th><th>Profesional</th></tr></thead>
+        <tbody>
+        {% for a in atenciones %}
+          <tr>
+            <td><a href="{% url 'pacientes:detalle_atencion' a.pk %}">
+              <strong>{{ a.fecha|date:"d/m/Y" }}</strong></a></td>
+            <td>{{ a.motivo_consulta|truncatechars:60 }}</td>
+            <td>{{ a.impresion_diagnostica|truncatechars:60|default:"—" }}</td>
+            <td>{{ a.profesional.get_full_name|default:a.profesional.username }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}<p class="vacio">Este paciente aun no tiene atenciones registradas.</p>{% endif %}
+  </div>
+
+{% else %}
+  <div class="tarjeta">
+    <p class="vacio" style="margin:0">
+      🔒 La ficha clinica (antecedentes, diagnosticos y atenciones) solo es visible
+      para el personal medico.
+    </p>
+  </div>
+{% endif %}
+
+<div class="tarjeta">
+  <h3>Historial de horas</h3>
+  {% if citas %}
+    <table>
+      <tbody>
+      {% for c in citas %}
+        <tr>
+          <td style="width:150px"><strong>{{ c.fecha_hora|date:"d/m/Y H:i" }}</strong></td>
+          <td>{{ c.get_tipo_display }}</td>
+          <td style="text-align:right">
+            <span class="estado estado-{{ c.estado }}">{{ c.get_estado_display }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}<p class="vacio">Sin horas agendadas.</p>{% endif %}
+</div>
+{% endblock %}

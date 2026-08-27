@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block titulo %}Antecedentes{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Antecedentes neurologicos</h1>
+    <p class="subtitulo">{{ paciente.nombre_completo }} &middot; {{ paciente.edad_texto }}</p>
+  </div>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <fieldset>
+    <legend>Embarazo y parto</legend>
+    <div class="grid grid-3">
+      {% include '_campo.html' with campo=form.semanas_gestacion %}
+      {% include '_campo.html' with campo=form.peso_nacimiento_gramos %}
+      {% include '_campo.html' with campo=form.tipo_parto %}
+    </div>
+    {% include '_campo.html' with campo=form.complicaciones_embarazo %}
+  </fieldset>
+
+  <fieldset>
+    <legend>Desarrollo psicomotor (edad en meses)</legend>
+    <div class="grid grid-4">
+      {% include '_campo.html' with campo=form.edad_sosten_cefalico %}
+      {% include '_campo.html' with campo=form.edad_sedestacion %}
+      {% include '_campo.html' with campo=form.edad_marcha %}
+      {% include '_campo.html' with campo=form.edad_primeras_palabras %}
+    </div>
+    {% include '_campo.html' with campo=form.observaciones_desarrollo %}
+  </fieldset>
+
+  <fieldset>
+    <legend>Otros antecedentes</legend>
+    {% include '_campo.html' with campo=form.antecedentes_familiares %}
+    {% include '_campo.html' with campo=form.antecedentes_morbidos %}
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.alergias %}
+      {% include '_campo.html' with campo=form.medicamentos_actuales %}
+    </div>
+  </fieldset>
+
+  <div class="acciones">
+    <button type="submit" class="boton">Guardar antecedentes</button>
+    <a href="{% url 'pacientes:detalle' paciente.pk %}" class="boton boton-secundario">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

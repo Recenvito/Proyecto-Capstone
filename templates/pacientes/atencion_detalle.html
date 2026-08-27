@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block titulo %}Atencion {{ atencion.fecha|date:"d/m/Y" }}{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Atencion del {{ atencion.fecha|date:"d/m/Y" }}</h1>
+    <p class="subtitulo">
+      <a href="{% url 'pacientes:detalle' atencion.paciente.pk %}">
+        {{ atencion.paciente.nombre_completo }}</a>
+      &middot; Atendido por {{ atencion.profesional.get_full_name|default:atencion.profesional.username }}
+    </p>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h3>Motivo de consulta</h3>
+  <p>{{ atencion.motivo_consulta|linebreaks }}</p>
+
+  {% if atencion.anamnesis %}
+    <h3 style="margin-top:20px">Anamnesis</h3>
+    <p>{{ atencion.anamnesis|linebreaks }}</p>
+  {% endif %}
+
+  {% if atencion.examen_fisico %}
+    <h3 style="margin-top:20px">Examen fisico y neurologico</h3>
+    <p>{{ atencion.examen_fisico|linebreaks }}</p>
+  {% endif %}
+</div>
+
+{% if atencion.peso_kg or atencion.talla_cm or atencion.perimetro_cefalico_cm %}
+<div class="tarjeta">
+  <h3>Antropometria</h3>
+  <div class="datos">
+    <div class="dato"><div class="etiqueta">Peso</div>
+      <div class="valor">{% if atencion.peso_kg %}{{ atencion.peso_kg }} kg{% else %}—{% endif %}</div></div>
+    <div class="dato"><div class="etiqueta">Talla</div>
+      <div class="valor">{% if atencion.talla_cm %}{{ atencion.talla_cm }} cm{% else %}—{% endif %}</div></div>
+    <div class="dato"><div class="etiqueta">Perimetro cefalico</div>
+      <div class="valor">{% if atencion.perimetro_cefalico_cm %}{{ atencion.perimetro_cefalico_cm }} cm{% else %}—{% endif %}</div></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="tarjeta">
+  {% if atencion.impresion_diagnostica %}
+    <h3>Impresion diagnostica</h3><p>{{ atencion.impresion_diagnostica|linebreaks }}</p>
+  {% endif %}
+  {% if atencion.indicaciones %}
+    <h3 style="margin-top:20px">Indicaciones</h3><p>{{ atencion.indicaciones|linebreaks }}</p>
+  {% endif %}
+  {% if atencion.examenes_solicitados %}
+    <h3 style="margin-top:20px">Examenes solicitados</h3><p>{{ atencion.examenes_solicitados|linebreaks }}</p>
+  {% endif %}
+  {% if atencion.derivaciones %}
+    <h3 style="margin-top:20px">Derivaciones</h3><p>{{ atencion.derivaciones|linebreaks }}</p>
+  {% endif %}
+  {% if atencion.proximo_control %}
+    <h3 style="margin-top:20px">Proximo control</h3><p>{{ atencion.proximo_control }}</p>
+  {% endif %}
+</div>
+{% endblock %}

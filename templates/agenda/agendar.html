@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block titulo %}Agendar hora{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Agendar hora</h1>
+    <p class="subtitulo">El sistema avisa si el horario ya esta ocupado.</p>
+  </div>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="mensaje error">
+      {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+    </div>
+  {% endif %}
+
+  <fieldset>
+    <legend>Datos de la hora</legend>
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.paciente %}
+      {% include '_campo.html' with campo=form.profesional %}
+    </div>
+    <div class="grid grid-3">
+      {% include '_campo.html' with campo=form.fecha_hora %}
+      {% include '_campo.html' with campo=form.duracion_minutos %}
+      {% include '_campo.html' with campo=form.tipo %}
+    </div>
+    {% include '_campo.html' with campo=form.motivo %}
+    {% include '_campo.html' with campo=form.notas_internas %}
+  </fieldset>
+
+  <div class="acciones">
+    <button type="submit" class="boton">Agendar</button>
+    <a href="{% url 'agenda:calendario' %}" class="boton boton-secundario">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

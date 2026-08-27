@@ -1,0 +1,35 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesion</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body>
+  <div class="login-pantalla">
+    <div class="login-caja">
+      <h1>NeuroFicha</h1>
+      <p class="subtitulo" style="margin-bottom:24px">Agenda y ficha clinica</p>
+
+      {% if form.errors %}
+        <div class="mensaje error">Usuario o contrasena incorrectos.</div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="campo">
+          <label for="id_username">Usuario</label>
+          <input type="text" name="username" id="id_username" class="input" required autofocus>
+        </div>
+        <div class="campo">
+          <label for="id_password">Contrasena</label>
+          <input type="password" name="password" id="id_password" class="input" required>
+        </div>
+        <button type="submit" class="boton" style="width:100%">Entrar</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

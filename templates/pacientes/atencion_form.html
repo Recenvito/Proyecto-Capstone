@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block titulo %}Nueva atencion{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Registrar atencion</h1>
+    <p class="subtitulo">{{ paciente.nombre_completo }} &middot; {{ paciente.edad_texto }}
+      &middot; {{ paciente.rut }}</p>
+  </div>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <fieldset>
+    <legend>Consulta</legend>
+    {% include '_campo.html' with campo=form.fecha %}
+    {% include '_campo.html' with campo=form.motivo_consulta %}
+    {% include '_campo.html' with campo=form.anamnesis %}
+    {% include '_campo.html' with campo=form.examen_fisico %}
+  </fieldset>
+
+  <fieldset>
+    <legend>Antropometria</legend>
+    <div class="grid grid-3">
+      {% include '_campo.html' with campo=form.peso_kg %}
+      {% include '_campo.html' with campo=form.talla_cm %}
+      {% include '_campo.html' with campo=form.perimetro_cefalico_cm %}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Conducta</legend>
+    {% include '_campo.html' with campo=form.impresion_diagnostica %}
+    {% include '_campo.html' with campo=form.indicaciones %}
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.examenes_solicitados %}
+      {% include '_campo.html' with campo=form.derivaciones %}
+    </div>
+    {% include '_campo.html' with campo=form.proximo_control %}
+  </fieldset>
+
+  <div class="acciones">
+    <button type="submit" class="boton boton-verde">Guardar en la ficha</button>
+    <a href="{% url 'pacientes:detalle' paciente.pk %}" class="boton boton-secundario">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

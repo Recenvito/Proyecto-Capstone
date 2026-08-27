@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Sistema clinico{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <header class="barra">
+    <span class="marca">NeuroFicha</span>
+    <nav>
+      <a href="{% url 'inicio' %}">Inicio</a>
+      <a href="{% url 'agenda:calendario' %}">Agenda</a>
+      <a href="{% url 'pacientes:lista' %}">Pacientes</a>
+      {% if user.is_staff %}<a href="/admin/">Administracion</a>{% endif %}
+    </nav>
+    <div class="usuario">
+      <span>{{ user.get_full_name|default:user.username }} &middot; {{ user.get_rol_display }}</span>
+      <form method="post" action="{% url 'logout' %}" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="boton boton-chico boton-secundario">Salir</button>
+      </form>
+    </div>
+  </header>
+  {% endif %}
+
+  <main class="contenedor">
+    {% for mensaje in messages %}
+      <div class="mensaje {{ mensaje.tags }}">{{ mensaje }}</div>
+    {% endfor %}
+    {% block contenido %}{% endblock %}
+  </main>
+</body>
+</html>

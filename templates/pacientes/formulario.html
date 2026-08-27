@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+<div class="encabezado"><h1>{{ titulo }}</h1></div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <fieldset>
+    <legend>Identificacion</legend>
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.rut %}
+      {% include '_campo.html' with campo=form.fecha_nacimiento %}
+    </div>
+    <div class="grid grid-3">
+      {% include '_campo.html' with campo=form.nombres %}
+      {% include '_campo.html' with campo=form.apellido_paterno %}
+      {% include '_campo.html' with campo=form.apellido_materno %}
+    </div>
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.sexo %}
+      {% include '_campo.html' with campo=form.prevision %}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Contacto y contexto</legend>
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.direccion %}
+      {% include '_campo.html' with campo=form.comuna %}
+    </div>
+    <div class="grid grid-3">
+      {% include '_campo.html' with campo=form.colegio %}
+      {% include '_campo.html' with campo=form.curso %}
+      {% include '_campo.html' with campo=form.derivado_por %}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Tutores / Apoderados</legend>
+    {{ formset.management_form }}
+    {% for subform in formset %}
+      <div class="tarjeta" style="background:#fbfcfd;margin-bottom:12px">
+        {{ subform.id }}
+        <div class="grid grid-3">
+          {% include '_campo.html' with campo=subform.nombre_completo %}
+          {% include '_campo.html' with campo=subform.rut %}
+          {% include '_campo.html' with campo=subform.parentesco %}
+        </div>
+        <div class="grid grid-2">
+          {% include '_campo.html' with campo=subform.telefono %}
+          {% include '_campo.html' with campo=subform.email %}
+        </div>
+        <label style="font-size:13px">
+          {{ subform.es_principal }} Contacto principal (recibe los recordatorios)
+        </label>
+        {% if subform.instance.pk %}
+          <label style="font-size:13px;margin-left:20px;color:var(--rojo)">
+            {{ subform.DELETE }} Eliminar este tutor
+          </label>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </fieldset>
+
+  <div class="acciones">
+    <button type="submit" class="boton">Guardar</button>
+    <a href="{% if paciente %}{% url 'pacientes:detalle' paciente.pk %}{% else %}{% url 'pacientes:lista' %}{% endif %}"
+       class="boton boton-secundario">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

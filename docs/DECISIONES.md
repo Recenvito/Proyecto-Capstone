@@ -94,3 +94,33 @@ LTS lo tiene hasta abril de 2028, es decir, cubre toda la vida util del proyecto
 
 Todo el equipo debe usar la **misma version de Python (3.13)**, sin importar el sistema
 operativo, para que `requirements.txt` funcione igual en todas las maquinas.
+
+---
+
+## Decision tomada — Repositorio publico
+
+**Repositorio:** https://github.com/Recenvito/Proyecto-Capstone
+
+Se mantiene **publico** de forma deliberada: los evaluadores de casa central deben poder
+revisar el codigo sin que el equipo tenga que agregar a cada persona como colaborador del
+repositorio (lo que ademas les daria permiso de escritura innecesario).
+
+### Regla de trabajo que se deriva de esto
+
+Al ser publico, hay una separacion que el equipo debe respetar durante todo el proyecto:
+
+| Donde vive | Que contiene |
+|---|---|
+| Repositorio de GitHub (publico) | **Solo codigo.** Datos de pacientes siempre ficticios. |
+| Base de datos Oracle | Los pacientes **reales**. Nunca pasa por Git. |
+| Archivo `.env` (local, en `.gitignore`) | Credenciales reales de la base de datos. |
+
+**Riesgo concreto:** el archivo `crear_datos_demo.py` esta versionado y contiene los
+pacientes de prueba. **No se debe editar reemplazando los datos ficticios por pacientes
+reales.** Los pacientes reales se ingresan por la aplicacion web, que es justamente el
+sistema que se esta construyendo.
+
+**Por que importa:** lo que se sube al historial de Git no se puede borrar del todo. Un
+commit posterior que elimine un dato sensible no lo saca del historial: sigue siendo
+recuperable, y si el repositorio es publico, cualquiera pudo haberlo clonado antes.
+Se trata de datos de salud de menores de edad.

@@ -163,8 +163,17 @@ de los pacientes.
 ./scripts/mysql-consola.sh    # abrir la consola SQL sobre la base del proyecto
 ```
 
-MySQL hay que **encenderlo antes** de levantar el servidor de Django. No arranca solo
-al prender el Mac.
+En el Mac de Rodrigo MySQL **arranca solo** al iniciar sesion, mediante un agente de
+macOS (`~/Library/LaunchAgents/com.neuroficha.mysql.plist`). Si se cae por un error, el
+sistema lo vuelve a levantar; si lo apagas a proposito con `mysql-detener.sh`, se queda
+apagado hasta que lo enciendas.
+
+Para desactivar el arranque automatico:
+
+```bash
+launchctl bootout gui/$(id -u)/com.neuroficha.mysql
+rm ~/Library/LaunchAgents/com.neuroficha.mysql.plist
+```
 
 ## Cambiar de motor de base de datos
 

@@ -124,3 +124,53 @@ sistema que se esta construyendo.
 commit posterior que elimine un dato sensible no lo saca del historial: sigue siendo
 recuperable, y si el repositorio es publico, cualquiera pudo haberlo clonado antes.
 Se trata de datos de salud de menores de edad.
+
+---
+
+## Decision tomada — Base de datos: MySQL 8.4 LTS
+
+**Fecha:** 2026-09-22. Reemplaza la decision previa de usar Oracle SQL.
+
+### Motivo
+
+Oracle Database no se puede instalar en macOS (Oracle no publica version para Mac desde
+2010), lo que dejaba a un integrante del equipo obligado a trabajar con Docker o con una
+base en la nube, distinto del resto. **MySQL corre nativo tanto en macOS (Apple Silicon)
+como en Windows**, asi que todo el equipo trabaja igual.
+
+Se evaluo tambien PostgreSQL, tecnicamente equivalente para este proyecto. Se elegio
+MySQL porque el equipo ya lo maneja de otros ramos, lo que reduce la curva de aprendizaje
+y el riesgo de bloqueos.
+
+### Version
+
+**MySQL 8.4 LTS**, no la serie "Innovation". La serie LTS recibe correcciones de
+seguridad por varios anios y no introduce cambios incompatibles, que es lo que conviene
+para un proyecto que se desarrolla durante meses y se defiende al final.
+
+### Configuracion aplicada
+
+- Codificacion `utf8mb4` en la base, las tablas y la conexion, para que los nombres con
+  tilde y la letra "n" con virgulilla se guarden correctamente.
+- `sql_mode = STRICT_TRANS_TABLES`: MySQL rechaza datos invalidos en vez de guardarlos
+  truncados en silencio. Es importante en un sistema con informacion clinica, donde un
+  dato cortado a la mitad puede cambiar el sentido de una indicacion medica.
+- El servidor solo escucha en `127.0.0.1`, es decir, no acepta conexiones desde fuera
+  del computador.
+- La aplicacion se conecta con un usuario dedicado (`neuroficha`) que solo tiene
+  permisos sobre su propia base, no con el usuario administrador.
+
+### Instalacion en macOS
+
+MySQL no ofrece un instalador para Mac que no exija permisos de administrador, por lo que
+se uso el paquete portable (`.tar.gz`) descomprimido en `~/.local/mysql`. Funciona igual
+y no requiere contrasenia de administrador. Hay scripts en `scripts/` para encenderlo,
+apagarlo y abrir la consola.
+
+En Windows se usa el instalador oficial de MySQL 8.4 LTS (o XAMPP, que trae MySQL).
+
+### Lo que NO cambio
+
+El codigo de la aplicacion es identico: modelos, vistas, formularios y consultas no se
+tocaron. Django traduce las consultas al motor configurado. Lo unico que cambia es el
+archivo `.env`.

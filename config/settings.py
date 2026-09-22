@@ -18,8 +18,11 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Lee las credenciales desde el archivo .env (que NO se sube a GitHub)
-load_dotenv(BASE_DIR / '.env')
+# Lee las credenciales desde el archivo .env (que NO se sube a GitHub).
+# override=True hace que el .env mande sobre lo que ya estuviera en memoria:
+# sin esto, al reiniciarse solo el servidor se queda con los valores viejos y
+# los cambios del .env parecen no tener efecto.
+load_dotenv(BASE_DIR / '.env', override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -86,8 +89,30 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Se elige con la variable DB_ENGINE del archivo .env
-if os.environ.get('DB_ENGINE', 'sqlite') == 'oracle':
+# Motor de base de datos: se elige con DB_ENGINE en el archivo .env
+_motor = os.environ.get('DB_ENGINE', 'mysql')
+
+if _motor == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQL_DATABASE', 'neuroficha'),
+            'USER': os.environ.get('MYSQL_USER', 'neuroficha'),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+            'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                # Hace que MySQL sea estricto: rechaza datos invalidos en vez
+                # de guardarlos truncados en silencio. Importante en un sistema
+                # con informacion clinica.
+                'sql_mode': 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION',
+            },
+            'TEST': {'CHARSET': 'utf8mb4', 'COLLATION': 'utf8mb4_0900_ai_ci'},
+        }
+    }
+
+elif _motor == 'oracle':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.oracle',
@@ -99,8 +124,9 @@ if os.environ.get('DB_ENGINE', 'sqlite') == 'oracle':
             'TEST': {'USER': os.environ.get('ORACLE_TEST_USER', 'test_neuroficha')},
         }
     }
+
 else:
-    # Base de datos local de desarrollo, para trabajar sin Oracle levantado
+    # Base de datos local en un archivo, para trabajar sin levantar MySQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

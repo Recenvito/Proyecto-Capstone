@@ -9,6 +9,20 @@ env/
 db.sqlite3
 *.sqlite3
 
+# Respaldos y volcados de la base de datos.
+# NUNCA subir estos archivos: pueden contener datos reales de pacientes,
+# y el repositorio es publico. Lo que va versionado es la ESTRUCTURA,
+# en las migraciones de Django, no el contenido.
+*.sql
+*.dump
+*.bak
+respaldos/
+backups/
+
+# Archivos subidos por los usuarios (examenes, informes adjuntos).
+# Son datos clinicos: van en el servidor, no en el repositorio.
+media/
+
 # Archivos compilados de Python
 __pycache__/
 *.py[cod]

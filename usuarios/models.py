@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -66,3 +67,36 @@ class Usuario(AbstractUser):
     def puede_ver_ficha_clinica(self):
         """Solo el personal medico accede al contenido clinico."""
         return self.rol in (self.Rol.MEDICO, self.Rol.ADMIN)
+
+class AuditoriaAcceso(models.Model):
+  """Registro de accesos y cierres de sesion."""
+
+  class Accion(models.TextChoices):
+    INICIO = 'INICIO', 'Inicio de sesion'
+    CIERRE = 'CIERRE', 'Cierre de sesion'
+
+  usuario = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name='auditorias_acceso',
+  )
+  accion = models.CharField(
+    max_length=10,
+    choices=Accion.choices,
+  )
+  fecha_hora = models.DateTimeField(auto_now_add=True)
+  ip = models.GenericIPAddressField(
+    null=True,
+    blank=True,
+  )
+
+  class Meta:
+    verbose_name = 'Auditoria de acceso'
+    verbose_name_plural = 'Auditorias de acceso'
+    ordering = ['-fecha_hora']
+
+  def __str__(self):
+    usuario = self.usuario or 'Usuario desconocido'
+    return f'{usuario} - {self.get_accion_display()} - {self.fecha_hora}'

@@ -1,35 +1,226 @@
 {% load static %}
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Iniciar sesion</title>
+
+  <title>Iniciar sesión</title>
+
   <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
 </head>
+
 <body>
+
   <div class="login-pantalla">
-    <div class="login-caja">
-      <h1>NeuroFicha</h1>
-      <p class="subtitulo" style="margin-bottom:24px">Agenda y ficha clinica</p>
 
-      {% if form.errors %}
-        <div class="mensaje error">Usuario o contrasena incorrectos.</div>
-      {% endif %}
+    <!-- =====================================================
+         PANEL IZQUIERDO
+         ===================================================== -->
 
-      <form method="post">
-        {% csrf_token %}
-        <div class="campo">
-          <label for="id_username">Usuario</label>
-          <input type="text" name="username" id="id_username" class="input" required autofocus>
+    <section class="login-presentacion">
+
+      <!-- Logo / nombre del sistema -->
+      <div class="login-marca">
+
+        <div class="login-logo">
+
+          <div class="login-logo-icon">
+            ✚
+          </div>
+
+          <div class="login-logo-texto">
+            <strong>NeuroFicha</strong>
+
+            <small>
+              Sistema de gestión clínica
+            </small>
+          </div>
+
         </div>
-        <div class="campo">
-          <label for="id_password">Contrasena</label>
-          <input type="password" name="password" id="id_password" class="input" required>
+
+      </div>
+
+
+      <!-- Presentación -->
+      <div class="login-descripcion">
+
+        <h1>
+          Gestión integral de
+          fichas clínicas.
+        </h1>
+
+        <p>
+          Centraliza el seguimiento de pacientes,
+          tratamientos, informes terapéuticos y
+          alertas clínicas en un solo sistema.
+        </p>
+
+      </div>
+
+
+      <!-- Indicadores -->
+      <div class="login-indicadores">
+
+        <div class="login-indicador">
+
+          <strong>148</strong>
+
+          <span>
+            Pacientes activos
+          </span>
+
         </div>
-        <button type="submit" class="boton" style="width:100%">Entrar</button>
-      </form>
-    </div>
+
+
+        <div class="login-indicador">
+
+          <strong>6</strong>
+
+          <span>
+            Profesionales
+          </span>
+
+        </div>
+
+
+        <div class="login-indicador">
+
+          <strong>97%</strong>
+
+          <span>
+            Seguimiento completo
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         PANEL DERECHO
+         ===================================================== -->
+
+    <section class="login-formulario">
+
+      <div class="login-contenido">
+
+
+        <!-- Encabezado -->
+        <div class="login-titulo">
+
+          <h2>
+            Iniciar sesión
+          </h2>
+
+          <p>
+            Accede con tus credenciales institucionales
+          </p>
+
+        </div>
+
+
+        <!-- Mensaje de error -->
+        {% if form.errors %}
+
+          <div class="mensaje error">
+
+            Usuario o contraseña incorrectos.
+
+          </div>
+
+        {% endif %}
+
+
+        <!-- Formulario -->
+        <form method="post">
+
+          {% csrf_token %}
+
+
+          <!-- Usuario -->
+          <div class="campo login-campo">
+
+            <label for="id_username">
+              Usuario
+            </label>
+
+            <input
+              type="text"
+              name="username"
+              id="id_username"
+              class="input"
+              autocomplete="username"
+              required
+              autofocus
+            >
+
+          </div>
+
+
+          <!-- Contraseña -->
+          <div class="campo login-campo">
+
+            <label for="id_password">
+              Contraseña
+            </label>
+
+            <input
+              type="password"
+              name="password"
+              id="id_password"
+              class="input"
+              autocomplete="current-password"
+              required
+            >
+
+          </div>
+
+
+          <!-- Recuperación -->
+          <div class="login-recuperar">
+
+            <a href="{% url 'password_reset' %}">
+              ¿Olvidaste tu contraseña?
+            </a>
+
+          </div>
+
+
+          <!-- Botón -->
+          <button
+            type="submit"
+            class="boton login-boton"
+          >
+            Iniciar sesión
+          </button>
+
+
+          <!-- Información -->
+          <div class="login-aviso">
+
+            <p>
+              Acceso restringido a personal autorizado.
+            </p>
+
+            <span>
+              Datos protegidos según la normativa aplicable.
+            </span>
+
+          </div>
+
+
+        </form>
+
+      </div>
+
+    </section>
+
   </div>
+
 </body>
+
 </html>

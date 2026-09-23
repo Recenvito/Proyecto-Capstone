@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import JsonResponse
 
 from usuarios.permisos import solo_clinico
 
@@ -12,24 +15,30 @@ from .models import AntecedentesNeurologicos, Atencion, Paciente
 
 @login_required
 def lista(request):
-    """Listado de pacientes con buscador por nombre o RUT."""
-    busqueda = request.GET.get('q', '').strip()
-    pacientes = Paciente.objects.filter(activo=True)
+  """Listado de pacientes con buscador por nombre o RUT."""
+  busqueda = request.GET.get('q', '').strip()
 
-    if busqueda:
-        pacientes = pacientes.filter(
-            Q(rut__icontains=busqueda)
-            | Q(nombres__icontains=busqueda)
-            | Q(apellido_paterno__icontains=busqueda)
-            | Q(apellido_materno__icontains=busqueda)
-        )
+  pacientes = Paciente.objects.filter(
+    activo=True
+  ).order_by('nombres')
 
-    return render(request, 'pacientes/lista.html', {
-        'pacientes': pacientes[:100],
-        'busqueda': busqueda,
-        'total': pacientes.count(),
-    })
+  if busqueda:
+    pacientes = pacientes.filter(
+      Q(rut__icontains=busqueda)
+      | Q(nombres__icontains=busqueda)
+      | Q(apellido_paterno__icontains=busqueda)
+      | Q(apellido_materno__icontains=busqueda)
+    )
 
+  paginator = Paginator(pacientes, 15)
+  pagina = request.GET.get('page')
+  pacientes_pagina = paginator.get_page(pagina)
+
+  return render(request, 'pacientes/lista.html', {
+    'pacientes': pacientes_pagina,
+    'busqueda': busqueda,
+    'total': pacientes.count(),
+  })
 
 @login_required
 def detalle(request, pk):
@@ -131,6 +140,40 @@ def crear_atencion(request, pk):
         'form': form, 'paciente': paciente,
     })
 
+@login_required
+def buscar(request):
+  """Busqueda de pacientes para actualizar la lista sin recargar."""
+  busqueda = request.GET.get('q', '').strip()
+
+  pacientes = Paciente.objects.filter(
+    activo=True
+  ).order_by('nombres')
+
+  if busqueda:
+    pacientes = pacientes.filter(
+      Q(rut__icontains=busqueda)
+      | Q(nombres__icontains=busqueda)
+      | Q(apellido_paterno__icontains=busqueda)
+      | Q(apellido_materno__icontains=busqueda)
+    )
+
+  pacientes = pacientes[:15]
+
+  resultados = []
+
+  for paciente in pacientes:
+    resultados.append({
+      'id': paciente.pk,
+      'nombre': paciente.nombre_completo,
+      'rut': paciente.rut,
+      'edad': paciente.edad_texto,
+      'prevision': paciente.get_prevision_display(),
+    })
+
+  return JsonResponse({
+    'pacientes': resultados,
+  })
+
 
 @login_required
 @solo_clinico
@@ -138,3 +181,4 @@ def detalle_atencion(request, pk):
     atencion = get_object_or_404(
         Atencion.objects.select_related('paciente', 'profesional'), pk=pk)
     return render(request, 'pacientes/atencion_detalle.html', {'atencion': atencion})
+

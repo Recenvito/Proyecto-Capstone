@@ -12,4 +12,5 @@ urlpatterns = [
     path('<int:pk>/antecedentes/', views.editar_antecedentes, name='antecedentes'),
     path('<int:pk>/atencion/nueva/', views.crear_atencion, name='crear_atencion'),
     path('atencion/<int:pk>/', views.detalle_atencion, name='detalle_atencion'),
+    path('buscar/', views.buscar, name='buscar'),
 ]

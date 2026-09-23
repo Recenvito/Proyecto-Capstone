@@ -2,50 +2,328 @@
 {% block titulo %}Pacientes{% endblock %}
 
 {% block contenido %}
+
 <div class="encabezado">
   <div>
     <h1>Pacientes</h1>
-    <p class="subtitulo">{{ total }} paciente{{ total|pluralize }} activo{{ total|pluralize }}</p>
+    <p class="subtitulo">
+      {{ total }} paciente{{ total|pluralize }}
+      activo{{ total|pluralize }}
+    </p>
   </div>
-  <a href="{% url 'pacientes:crear' %}" class="boton">+ Nuevo paciente</a>
+
+  <a href="{% url 'pacientes:crear' %}" class="boton">
+    + Nuevo paciente
+  </a>
 </div>
 
 <div class="tarjeta">
-  <form method="get" style="display:flex;gap:10px;margin-bottom:18px">
-    <input type="text" name="q" class="input" value="{{ busqueda }}"
-           placeholder="Buscar por nombre o RUT..." autofocus>
-    <button type="submit" class="boton">Buscar</button>
-    {% if busqueda %}<a href="{% url 'pacientes:lista' %}" class="boton boton-secundario">Limpiar</a>{% endif %}
+
+  <form method="get" class="pacientes-filtros" id="form-busqueda-pacientes">
+
+    <div class="pacientes-buscador">
+      <span class="pacientes-icono">🔎</span>
+
+      <input
+        type="text"
+        name="q"
+        id="busqueda-pacientes"
+        class="input"
+        value="{{ busqueda }}"
+        placeholder="Buscar por nombre o RUT..."
+        autocomplete="off"
+      >
+    </div>
+
+    <button type="submit" class="boton">
+      Buscar
+    </button>
+
+    {% if busqueda %}
+      <a
+        href="{% url 'pacientes:lista' %}"
+        class="boton boton-secundario"
+      >
+        Limpiar
+      </a>
+    {% endif %}
+
   </form>
 
   {% if pacientes %}
-  <table>
-    <thead>
-      <tr><th>RUT</th><th>Nombre</th><th>Edad</th><th>Prevision</th><th>Tutor principal</th></tr>
-    </thead>
-    <tbody>
-    {% for p in pacientes %}
-      <tr>
-        <td>{{ p.rut }}</td>
-        <td><a href="{% url 'pacientes:detalle' p.pk %}"><strong>{{ p.nombre_completo }}</strong></a></td>
-        <td>{{ p.edad_texto }}</td>
-        <td>{{ p.get_prevision_display }}</td>
-        <td>
-          {% with t=p.tutor_principal %}
-            {% if t %}{{ t.nombre_completo }}<br>
-              <span style="font-size:12px;color:var(--texto-suave)">{{ t.telefono }}</span>
-            {% else %}<span style="color:var(--texto-suave)">Sin tutor registrado</span>{% endif %}
-          {% endwith %}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+
+    <div class="tabla-responsive">
+
+      <table class="tabla-pacientes">
+
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Edad</th>
+            <th>Previsión</th>
+            <th>Tutor principal</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for p in pacientes %}
+
+            <tr>
+
+              <td>
+                <a
+                  href="{% url 'pacientes:detalle' p.pk %}"
+                  class="paciente-nombre"
+                >
+                  <strong>{{ p.nombre_completo }}</strong>
+                </a>
+
+                <span class="paciente-rut">
+                  {{ p.rut }}
+                </span>
+              </td>
+
+              <td>
+                {{ p.edad_texto }}
+              </td>
+
+              <td>
+                {{ p.get_prevision_display }}
+              </td>
+
+              <td>
+
+                {% with t=p.tutor_principal %}
+
+                  {% if t %}
+
+                    <div>
+                      {{ t.nombre_completo }}
+                    </div>
+
+                    <span class="paciente-secundario">
+                      {{ t.telefono }}
+                    </span>
+
+                  {% else %}
+
+                    <span class="paciente-secundario">
+                      Sin tutor registrado
+                    </span>
+
+                  {% endif %}
+
+                {% endwith %}
+
+              </td>
+
+              <td>
+
+                {% if p.activo %}
+
+                  <span class="estado estado-activo">
+                    Activo
+                  </span>
+
+                {% else %}
+
+                  <span class="estado estado-inactivo">
+                    Inactivo
+                  </span>
+
+                {% endif %}
+
+              </td>
+
+              <td class="tabla-accion">
+
+                <a
+                  href="{% url 'pacientes:detalle' p.pk %}"
+                  class="boton boton-secundario boton-pequeno"
+                >
+                  Ver ficha
+                </a>
+
+              </td>
+
+            </tr>
+
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    {% if pacientes.has_other_pages %}
+
+      <div class="paginacion">
+
+        {% if pacientes.has_previous %}
+          <a
+            href="?page={{ pacientes.previous_page_number }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}"
+            class="paginacion-boton"
+          >
+            ←
+          </a>
+        {% endif %}
+
+        {% for numero in pacientes.paginator.page_range %}
+
+          {% if pacientes.number == numero %}
+
+            <span class="paginacion-boton activo">
+              {{ numero }}
+            </span>
+
+          {% else %}
+
+            <a
+              href="?page={{ numero }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}"
+              class="paginacion-boton"
+            >
+              {{ numero }}
+            </a>
+
+          {% endif %}
+
+        {% endfor %}
+
+        {% if pacientes.has_next %}
+          <a
+            href="?page={{ pacientes.next_page_number }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}"
+            class="paginacion-boton"
+          >
+            →
+          </a>
+        {% endif %}
+
+      </div>
+
+    {% endif %}
+
   {% else %}
-    <p class="vacio">
-      {% if busqueda %}No se encontraron pacientes para "{{ busqueda }}".
-      {% else %}Aun no hay pacientes registrados.{% endif %}
-    </p>
+
+    <div class="vacio">
+
+      {% if busqueda %}
+
+        <p>
+          No se encontraron pacientes para
+          "<strong>{{ busqueda }}</strong>".
+        </p>
+
+        <a
+          href="{% url 'pacientes:lista' %}"
+          class="boton boton-secundario"
+        >
+          Limpiar búsqueda
+        </a>
+
+      {% else %}
+
+        <p>
+          Aún no hay pacientes registrados.
+        </p>
+
+      {% endif %}
+
+    </div>
+
   {% endif %}
+
 </div>
+<script>
+  const busqueda = document.getElementById('busqueda-pacientes');
+  const tabla = document.querySelector('.tabla-pacientes tbody');
+
+  let temporizador;
+
+  busqueda.addEventListener('input', function () {
+    clearTimeout(temporizador);
+
+    temporizador = setTimeout(function () {
+      actualizarPacientes(busqueda.value);
+    }, 250);
+  });
+
+  async function actualizarPacientes(texto) {
+    try {
+      const respuesta = await fetch(
+        "{% url 'pacientes:buscar' %}?q=" +
+        encodeURIComponent(texto)
+      );
+
+      const datos = await respuesta.json();
+
+      tabla.innerHTML = '';
+
+      if (datos.pacientes.length === 0) {
+        tabla.innerHTML = `
+          <tr>
+            <td colspan="6" class="vacio">
+              No se encontraron pacientes.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      datos.pacientes.forEach(function (paciente) {
+        tabla.innerHTML += `
+          <tr>
+            <td>
+              <a
+                href="/pacientes/${paciente.id}/"
+                class="paciente-nombre"
+              >
+                <strong>${paciente.nombre}</strong>
+              </a>
+
+              <span class="paciente-rut">
+                ${paciente.rut}
+              </span>
+            </td>
+
+            <td>
+              ${paciente.edad}
+            </td>
+
+            <td>
+              ${paciente.prevision}
+            </td>
+
+            <td>
+              <span class="paciente-secundario">
+                —
+              </span>
+            </td>
+
+            <td>
+              <span class="estado estado-activo">
+                Activo
+              </span>
+            </td>
+
+            <td class="tabla-accion">
+              <a
+                href="/pacientes/${paciente.id}/"
+                class="boton boton-secundario boton-pequeno"
+              >
+                Ver ficha
+              </a>
+            </td>
+          </tr>
+        `;
+      });
+
+    } catch (error) {
+      console.error('Error al buscar pacientes:', error);
+    }
+  }
+</script>
 {% endblock %}

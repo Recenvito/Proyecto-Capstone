@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Acceso no autorizado{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta acceso-denegado">
+  <div class="acceso-denegado-icono">🔒</div>
+
+  <h1>Acceso no autorizado</h1>
+
+  <p class="acceso-denegado-mensaje">
+    {{ exception|default:"No tienes autorizacion para acceder a este contenido." }}
+  </p>
+
+  <p class="acceso-denegado-redireccion">
+    Seras redirigido al inicio en
+    <strong id="contador">5</strong> segundos.
+  </p>
+
+  <a href="{% url 'inicio' %}" class="boton">
+    Volver al inicio ahora
+  </a>
+</div>
+
+<script>
+  let segundos = 5;
+  const contador = document.getElementById('contador');
+
+  const intervalo = setInterval(() => {
+    segundos--;
+    contador.textContent = segundos;
+
+    if (segundos <= 0) {
+      clearInterval(intervalo);
+      window.location.href = "{% url 'inicio' %}";
+    }
+  }, 1000);
+</script>
+{% endblock %}

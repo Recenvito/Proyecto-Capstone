@@ -1379,4 +1379,37 @@ legend {
     font-size: 13px;
   }
 
+ /* ===== Acceso denegado ===== */
+  .acceso-denegado {
+    max-width: 620px;
+    margin: 70px auto;
+    padding: 42px;
+    text-align: center;
+  }
+
+  .acceso-denegado-icono {
+    font-size: 46px;
+    margin-bottom: 16px;
+  }
+
+  .acceso-denegado h1 {
+    margin: 0 0 12px;
+  }
+
+  .acceso-denegado-mensaje {
+    margin: 0 auto;
+    color: var(--texto-suave);
+    line-height: 1.6;
+  }
+
+  .acceso-denegado-redireccion {
+    margin: 24px 0;
+    color: var(--texto-suave);
+  }
+
+  .acceso-denegado-redireccion strong {
+    color: var(--azul);
+    font-size: 20px;
+  }
+
 }

@@ -1,26 +1,35 @@
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.http import JsonResponse
-
-from usuarios.permisos import solo_clinico
-
+from usuarios.permisos import (
+  puede_acceder_ficha,
+  puede_gestionar_paciente,
+  solo_clinico,
+)
 from .forms import AntecedentesForm, AtencionForm, PacienteForm, TutorFormSet
 from .models import AntecedentesNeurologicos, Atencion, Paciente
+from usuarios.models import Auditoria
 
 
 @login_required
 def lista(request):
-  """Listado de pacientes con buscador por nombre o RUT."""
+  """Listado de pacientes segun el acceso del usuario."""
   busqueda = request.GET.get('q', '').strip()
 
-  pacientes = Paciente.objects.filter(
-    activo=True
-  ).order_by('nombres')
+  pacientes = Paciente.objects.filter(activo=True)
+
+  if request.user.es_medico:
+    pacientes = pacientes.filter(
+      asignaciones_profesionales__profesional=request.user,
+      asignaciones_profesionales__activa=True,
+    )
+
+  pacientes = pacientes.order_by('nombres').distinct()
 
   if busqueda:
     pacientes = pacientes.filter(
@@ -42,61 +51,122 @@ def lista(request):
 
 @login_required
 def detalle(request, pk):
-    """Ficha del paciente. El contenido clinico se oculta segun el rol."""
-    paciente = get_object_or_404(Paciente, pk=pk)
-    return render(request, 'pacientes/detalle.html', {
-        'paciente': paciente,
-        'tutores': paciente.tutores.all(),
-        'diagnosticos': paciente.diagnosticos.all(),
-        'atenciones': paciente.atenciones.select_related('profesional')[:20],
-        'citas': paciente.citas.order_by('-fecha_hora')[:10],
-        'antecedentes': getattr(paciente, 'antecedentes', None),
+  """Ficha del paciente segun el acceso del usuario."""
+  paciente = get_object_or_404(Paciente, pk=pk)
+
+  if request.user.es_medico and not puede_acceder_ficha(
+    request.user, paciente
+  ):
+    raise PermissionDenied(
+      'No tienes acceso a este paciente porque no esta asignado a tu equipo tratante.'
+    )
+
+  acceso_clinico = puede_acceder_ficha(request.user, paciente)
+
+  contexto = {
+    'paciente': paciente,
+    'tutores': paciente.tutores.all(),
+    'citas': paciente.citas.order_by('-fecha_hora')[:10],
+    'acceso_clinico': acceso_clinico,
+    'diagnosticos': [],
+    'atenciones': [],
+    'antecedentes': None,
+  }
+
+  if acceso_clinico:
+    contexto.update({
+      'diagnosticos': paciente.diagnosticos.all(),
+      'atenciones': paciente.atenciones.select_related('profesional')[:20],
+      'antecedentes': getattr(paciente, 'antecedentes', None),
     })
 
+  return render(request, 'pacientes/detalle.html', contexto)
 
 @login_required
 def crear(request):
-    """Alta de un paciente nuevo, junto con sus tutores."""
-    if request.method == 'POST':
-        form = PacienteForm(request.POST)
-        formset = TutorFormSet(request.POST)
-        if form.is_valid():
-            paciente = form.save()
-            formset = TutorFormSet(request.POST, instance=paciente)
-            if formset.is_valid():
-                formset.save()
-            AntecedentesNeurologicos.objects.get_or_create(paciente=paciente)
-            messages.success(request, f'Paciente {paciente.nombre_completo} creado.')
-            return redirect('pacientes:detalle', pk=paciente.pk)
-    else:
-        form = PacienteForm()
-        formset = TutorFormSet()
+  """Alta de un paciente nuevo, junto con sus tutores."""
+  if request.method == 'POST':
+    form = PacienteForm(request.POST)
+    formset = TutorFormSet(request.POST)
 
-    return render(request, 'pacientes/formulario.html', {
-        'form': form, 'formset': formset, 'titulo': 'Nuevo paciente',
-    })
+    if form.is_valid():
+      paciente = form.save()
+      formset = TutorFormSet(request.POST, instance=paciente)
+
+      if formset.is_valid():
+        formset.save()
+
+      AntecedentesNeurologicos.objects.get_or_create(
+        paciente=paciente
+      )
+
+      Auditoria.objects.create(
+        usuario=request.user,
+        accion=Auditoria.Accion.CREAR,
+        modelo='Paciente',
+        registro_id=paciente.pk,
+        ip=request.META.get('REMOTE_ADDR'),
+        detalle={
+          'rut': paciente.rut,
+          'nombres': paciente.nombres,
+          'apellido_paterno': paciente.apellido_paterno,
+          'apellido_materno': paciente.apellido_materno,
+          'fecha_nacimiento': paciente.fecha_nacimiento.isoformat(),
+          'sexo': paciente.sexo,
+          'prevision': paciente.prevision,
+          'direccion': paciente.direccion,
+          'comuna': paciente.comuna,
+          'colegio': paciente.colegio,
+          'curso': paciente.curso,
+          'derivado_por': paciente.derivado_por,
+        },
+      )
+
+      messages.success(
+        request,
+        f'Paciente {paciente.nombre_completo} creado.'
+      )
+      return redirect('pacientes:detalle', pk=paciente.pk)
+
+  else:
+    form = PacienteForm()
+    formset = TutorFormSet()
+
+  return render(request, 'pacientes/formulario.html', {
+    'form': form,
+    'formset': formset,
+    'titulo': 'Nuevo paciente',
+  })
 
 
 @login_required
 def editar(request, pk):
-    paciente = get_object_or_404(Paciente, pk=pk)
-    if request.method == 'POST':
-        form = PacienteForm(request.POST, instance=paciente)
-        formset = TutorFormSet(request.POST, instance=paciente)
-        if form.is_valid() and formset.is_valid():
-            form.save()
-            formset.save()
-            messages.success(request, 'Datos actualizados.')
-            return redirect('pacientes:detalle', pk=paciente.pk)
-    else:
-        form = PacienteForm(instance=paciente)
-        formset = TutorFormSet(instance=paciente)
+  if not puede_gestionar_paciente(request.user):
+    raise PermissionDenied(
+      'No tienes permiso para modificar los datos administrativos del paciente.'
+    )
 
-    return render(request, 'pacientes/formulario.html', {
-        'form': form, 'formset': formset, 'paciente': paciente,
-        'titulo': f'Editar a {paciente.nombre_completo}',
-    })
+  paciente = get_object_or_404(Paciente, pk=pk)
 
+  if request.method == 'POST':
+    form = PacienteForm(request.POST, instance=paciente)
+    formset = TutorFormSet(request.POST, instance=paciente)
+
+    if form.is_valid() and formset.is_valid():
+      form.save()
+      formset.save()
+      messages.success(request, 'Datos actualizados.')
+      return redirect('pacientes:detalle', pk=paciente.pk)
+  else:
+    form = PacienteForm(instance=paciente)
+    formset = TutorFormSet(instance=paciente)
+
+  return render(request, 'pacientes/formulario.html', {
+    'form': form,
+    'formset': formset,
+    'paciente': paciente,
+    'titulo': f'Editar a {paciente.nombre_completo}',
+  })
 
 @login_required
 @solo_clinico
@@ -142,12 +212,20 @@ def crear_atencion(request, pk):
 
 @login_required
 def buscar(request):
-  """Busqueda de pacientes para actualizar la lista sin recargar."""
+  """Busqueda de pacientes segun el acceso del usuario."""
   busqueda = request.GET.get('q', '').strip()
 
   pacientes = Paciente.objects.filter(
     activo=True
-  ).order_by('nombres')
+  )
+
+  if request.user.es_medico:
+    pacientes = pacientes.filter(
+      asignaciones_profesionales__profesional=request.user,
+      asignaciones_profesionales__activa=True,
+    )
+
+  pacientes = pacientes.order_by('nombres').distinct()
 
   if busqueda:
     pacientes = pacientes.filter(
@@ -176,9 +254,18 @@ def buscar(request):
 
 
 @login_required
-@solo_clinico
 def detalle_atencion(request, pk):
-    atencion = get_object_or_404(
-        Atencion.objects.select_related('paciente', 'profesional'), pk=pk)
-    return render(request, 'pacientes/atencion_detalle.html', {'atencion': atencion})
+  """Detalle de una atencion con acceso segun paciente asignado."""
+  atencion = get_object_or_404(
+    Atencion.objects.select_related('paciente', 'profesional'),
+    pk=pk,
+  )
 
+  if not puede_acceder_ficha(request.user, atencion.paciente):
+    raise PermissionDenied(
+      'No tienes acceso a la ficha clinica de este paciente.'
+    )
+
+  return render(request, 'pacientes/atencion_detalle.html', {
+    'atencion': atencion,
+  })

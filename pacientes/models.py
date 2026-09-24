@@ -88,6 +88,36 @@ class Paciente(models.Model):
     def tutor_principal(self):
         return self.tutores.filter(es_principal=True).first() or self.tutores.first()
 
+class AsignacionProfesional(models.Model):
+    """Relaciona un paciente con un profesional de su equipo tratante."""
+
+    paciente = models.ForeignKey(
+        Paciente,
+        on_delete=models.CASCADE,
+        related_name='asignaciones_profesionales',
+    )
+    profesional = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='pacientes_asignados',
+    )
+    fecha_asignacion = models.DateTimeField(auto_now_add=True)
+    activa = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Asignacion profesional'
+        verbose_name_plural = 'Asignaciones profesionales'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['paciente', 'profesional'],
+                name='asignacion_paciente_profesional_unica',
+            ),
+        ]
+        ordering = ['-fecha_asignacion']
+
+    def __str__(self):
+        return f'{self.profesional} - {self.paciente.nombre_completo}'
+
 
 class Tutor(models.Model):
     """Madre, padre o apoderado responsable del paciente."""

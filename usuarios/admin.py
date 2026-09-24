@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
-from .models import Usuario
+from .models import Usuario, AuditoriaAcceso, Auditoria
 
 
 @admin.register(Usuario)
@@ -21,3 +20,41 @@ class UsuarioAdmin(UserAdmin):
             'fields': ('rol', 'first_name', 'last_name', 'email', 'rut', 'telefono'),
         }),
     )
+
+@admin.register(AuditoriaAcceso)
+class AuditoriaAccesoAdmin(admin.ModelAdmin):
+  list_display = ('usuario', 'accion', 'fecha_hora', 'ip')
+  list_filter = ('accion', 'fecha_hora')
+  search_fields = ('usuario__username', 'usuario__first_name', 'usuario__last_name', 'ip')
+  ordering = ('-fecha_hora',)
+  readonly_fields = ('usuario', 'accion', 'fecha_hora', 'ip')
+
+@admin.register(Auditoria)
+class AuditoriaAdmin(admin.ModelAdmin):
+  list_display = (
+    'usuario',
+    'accion',
+    'modelo',
+    'registro_id',
+    'fecha_hora',
+    'ip',
+  )
+  list_filter = ('accion', 'modelo', 'fecha_hora')
+  search_fields = (
+    'usuario__username',
+    'usuario__first_name',
+    'usuario__last_name',
+    'modelo',
+    'registro_id',
+    'ip',
+  )
+  ordering = ('-fecha_hora',)
+  readonly_fields = (
+    'usuario',
+    'accion',
+    'modelo',
+    'registro_id',
+    'fecha_hora',
+    'ip',
+    'detalle',
+  )

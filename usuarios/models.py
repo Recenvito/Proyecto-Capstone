@@ -100,3 +100,32 @@ class AuditoriaAcceso(models.Model):
   def __str__(self):
     usuario = self.usuario or 'Usuario desconocido'
     return f'{usuario} - {self.get_accion_display()} - {self.fecha_hora}'
+
+class Auditoria(models.Model):
+  class Accion(models.TextChoices):
+    CREAR = 'CREAR', 'Crear'
+    MODIFICAR = 'MODIFICAR', 'Modificar'
+    DESACTIVAR = 'DESACTIVAR', 'Desactivar'
+
+  usuario = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name='auditorias',
+  )
+  accion = models.CharField(max_length=20, choices=Accion.choices)
+  modelo = models.CharField(max_length=100)
+  registro_id = models.PositiveIntegerField()
+  fecha_hora = models.DateTimeField(auto_now_add=True)
+  ip = models.GenericIPAddressField(null=True, blank=True)
+  detalle = models.JSONField(default=dict, blank=True)
+
+  class Meta:
+    verbose_name = 'Auditoria'
+    verbose_name_plural = 'Auditorias'
+    ordering = ['-fecha_hora']
+
+  def __str__(self):
+    usuario = self.usuario or 'Usuario desconocido'
+    return f'{usuario} - {self.get_accion_display()} - {self.modelo} #{self.registro_id}'

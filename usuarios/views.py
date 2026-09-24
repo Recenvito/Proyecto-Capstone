@@ -27,6 +27,18 @@ class LoginAuditoriaView(auth_views.LoginView):
 
     return super().form_valid(form)
 
+class LogoutAuditoriaView(auth_views.LogoutView):
+  def dispatch(self, request, *args, **kwargs):
+    if request.user.is_authenticated:
+      from .models import AuditoriaAcceso
+
+      AuditoriaAcceso.objects.create(
+        usuario=request.user,
+        accion=AuditoriaAcceso.Accion.CIERRE,
+        ip=request.META.get('REMOTE_ADDR'),
+      )
+
+    return super().dispatch(request, *args, **kwargs)
 
 @login_required
 def inicio(request):

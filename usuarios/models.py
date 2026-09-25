@@ -106,6 +106,8 @@ class Auditoria(models.Model):
     CREAR = 'CREAR', 'Crear'
     MODIFICAR = 'MODIFICAR', 'Modificar'
     DESACTIVAR = 'DESACTIVAR', 'Desactivar'
+    ELIMINAR = 'ELIMINAR', 'Eliminar'
+    CONSULTAR = 'CONSULTAR', 'Consultar'
 
   usuario = models.ForeignKey(
     settings.AUTH_USER_MODEL,

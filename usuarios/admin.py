@@ -28,6 +28,14 @@ class AuditoriaAccesoAdmin(admin.ModelAdmin):
   search_fields = ('usuario__username', 'usuario__first_name', 'usuario__last_name', 'ip')
   ordering = ('-fecha_hora',)
   readonly_fields = ('usuario', 'accion', 'fecha_hora', 'ip')
+  def has_add_permission(self, request):
+      return False
+
+  def has_change_permission(self, request, obj=None):
+      return False
+
+  def has_delete_permission(self, request, obj=None):
+      return False
 
 @admin.register(Auditoria)
 class AuditoriaAdmin(admin.ModelAdmin):
@@ -58,3 +66,11 @@ class AuditoriaAdmin(admin.ModelAdmin):
     'ip',
     'detalle',
   )
+  def has_add_permission(self, request):
+      return False
+
+  def has_change_permission(self, request, obj=None):
+      return False
+
+  def has_delete_permission(self, request, obj=None):
+      return False

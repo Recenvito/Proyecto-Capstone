@@ -62,6 +62,17 @@ def detalle(request, pk):
     )
 
   acceso_clinico = puede_acceder_ficha(request.user, paciente)
+  if acceso_clinico:
+    Auditoria.objects.create(
+      usuario=request.user,
+      accion=Auditoria.Accion.CONSULTAR,
+      modelo='Ficha clínica',
+      registro_id=paciente.pk,
+      ip=request.META.get('REMOTE_ADDR'),
+      detalle={
+        'evento': 'Acceso a ficha clínica',
+      },
+    )  
 
   contexto = {
     'paciente': paciente,
@@ -153,10 +164,75 @@ def editar(request, pk):
     formset = TutorFormSet(request.POST, instance=paciente)
 
     if form.is_valid() and formset.is_valid():
-      form.save()
+      paciente = form.save()
+
+      tutores_eliminados = [
+        form_tutor.instance.pk
+        for form_tutor in formset.forms
+        if form_tutor.cleaned_data.get('DELETE')
+        and form_tutor.instance.pk
+      ]
+
       formset.save()
+
+      for tutor in formset.new_objects:
+        Auditoria.objects.create(
+          usuario=request.user,
+          accion=Auditoria.Accion.CREAR,
+          modelo='Tutor',
+          registro_id=tutor.pk,
+          ip=request.META.get('REMOTE_ADDR'),
+          detalle={'paciente_id': paciente.pk},
+        )
+
+      for tutor, campos_modificados in formset.changed_objects:
+        Auditoria.objects.create(
+          usuario=request.user,
+          accion=Auditoria.Accion.MODIFICAR,
+          modelo='Tutor',
+          registro_id=tutor.pk,
+          ip=request.META.get('REMOTE_ADDR'),
+          detalle={
+            'paciente_id': paciente.pk,
+            'campos_modificados': campos_modificados,
+          },
+        )
+
+      for tutor_id in tutores_eliminados:
+        Auditoria.objects.create(
+          usuario=request.user,
+          accion=Auditoria.Accion.ELIMINAR,
+          modelo='Tutor',
+          registro_id=tutor_id,
+          ip=request.META.get('REMOTE_ADDR'),
+          detalle={'paciente_id': paciente.pk},
+        )
+
+      Auditoria.objects.create(
+        usuario=request.user,
+        accion=Auditoria.Accion.MODIFICAR,
+        modelo='Paciente',
+        registro_id=paciente.pk,
+        ip=request.META.get('REMOTE_ADDR'),
+        detalle={
+          'rut': paciente.rut,
+          'nombres': paciente.nombres,
+          'apellido_paterno': paciente.apellido_paterno,
+          'apellido_materno': paciente.apellido_materno,
+          'fecha_nacimiento': paciente.fecha_nacimiento.isoformat(),
+          'sexo': paciente.sexo,
+          'prevision': paciente.prevision,
+          'direccion': paciente.direccion,
+          'comuna': paciente.comuna,
+          'colegio': paciente.colegio,
+          'curso': paciente.curso,
+          'derivado_por': paciente.derivado_por,
+        },
+      )
+
       messages.success(request, 'Datos actualizados.')
       return redirect('pacientes:detalle', pk=paciente.pk)
+
   else:
     form = PacienteForm(instance=paciente)
     formset = TutorFormSet(instance=paciente)
@@ -172,20 +248,45 @@ def editar(request, pk):
 @solo_clinico
 def editar_antecedentes(request, pk):
     paciente = get_object_or_404(Paciente, pk=pk)
-    antecedentes, _ = AntecedentesNeurologicos.objects.get_or_create(paciente=paciente)
-
+    antecedentes, _ = AntecedentesNeurologicos.objects.get_or_create(
+        paciente=paciente
+    )
     if request.method == 'POST':
-        form = AntecedentesForm(request.POST, instance=antecedentes)
+        form = AntecedentesForm(
+            request.POST,
+            instance=antecedentes
+        )
         if form.is_valid():
             form.save()
-            messages.success(request, 'Antecedentes guardados.')
-            return redirect('pacientes:detalle', pk=paciente.pk)
+            Auditoria.objects.create(
+                usuario=request.user,
+                accion=Auditoria.Accion.MODIFICAR,
+                modelo='AntecedentesNeurologicos',
+                registro_id=antecedentes.pk,
+                ip=request.META.get('REMOTE_ADDR'),
+                detalle={
+                    'evento': 'Modificacion de antecedentes clinicos',
+                    'paciente_id': paciente.pk,
+                },
+            )
+            messages.success(
+                request,
+                'Antecedentes guardados.'
+            )
+            return redirect(
+                'pacientes:detalle',
+                pk=paciente.pk
+            )
     else:
         form = AntecedentesForm(instance=antecedentes)
-
-    return render(request, 'pacientes/antecedentes.html', {
-        'form': form, 'paciente': paciente,
-    })
+    return render(
+        request,
+        'pacientes/antecedentes.html',
+        {
+            'form': form,
+            'paciente': paciente,
+        }
+    )
 
 
 @login_required
@@ -196,18 +297,39 @@ def crear_atencion(request, pk):
 
     if request.method == 'POST':
         form = AtencionForm(request.POST)
+
         if form.is_valid():
             atencion = form.save(commit=False)
             atencion.paciente = paciente
             atencion.profesional = request.user
             atencion.save()
-            messages.success(request, 'Atencion registrada en la ficha.')
+
+            Auditoria.objects.create(
+                usuario=request.user,
+                accion=Auditoria.Accion.CREAR,
+                modelo='Atencion',
+                registro_id=atencion.pk,
+                ip=request.META.get('REMOTE_ADDR'),
+                detalle={
+                    'paciente_id': paciente.pk,
+                    'fecha': atencion.fecha.isoformat(),
+                    'evento': 'Registro de atencion clinica',
+                },
+            )
+
+            messages.success(
+                request,
+                'Atencion registrada en la ficha.'
+            )
+
             return redirect('pacientes:detalle', pk=paciente.pk)
+
     else:
         form = AtencionForm(initial={'fecha': timezone.now()})
 
     return render(request, 'pacientes/atencion_form.html', {
-        'form': form, 'paciente': paciente,
+        'form': form,
+        'paciente': paciente,
     })
 
 @login_required

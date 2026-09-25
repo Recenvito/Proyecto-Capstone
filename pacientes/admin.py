@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from .models import AntecedentesNeurologicos, Atencion, Diagnostico, Paciente, Tutor
 
 

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Auditoría | NeuroFicha{% endblock %}
+
+{% block contenido %}
+
+<section class="panel">
+  <h1>Auditoría del sistema</h1>
+  <p>Consulta el historial de acciones registradas en NeuroFicha.</p>
+</section>
+
+<section class="panel">
+  <h2>Filtros de búsqueda</h2>
+
+  <form method="get">
+    <div class="formulario-grid">
+
+      <div class="campo">
+        <label for="usuario">Usuario</label>
+        <input
+          type="text"
+          id="usuario"
+          name="usuario"
+          value="{{ usuario_filtro }}"
+          placeholder="Buscar por nombre de usuario"
+        >
+      </div>
+
+      <div class="campo">
+        <label for="accion">Acción</label>
+        <select id="accion" name="accion">
+          <option value="">Todas las acciones</option>
+
+          {% for valor, etiqueta in acciones %}
+            <option
+              value="{{ valor }}"
+              {% if accion_filtro == valor %}selected{% endif %}
+            >
+              {{ etiqueta }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="modelo">Módulo o modelo</label>
+        <input
+          type="text"
+          id="modelo"
+          name="modelo"
+          value="{{ modelo_filtro }}"
+          placeholder="Ej. Paciente"
+        >
+      </div>
+
+    </div>
+
+    <div class="acciones-formulario">
+      <button type="submit" class="boton">Buscar</button>
+      <a href="{% url 'lista_auditoria' %}" class="boton boton-secundario">
+        Limpiar filtros
+      </a>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Registros de auditoría</h2>
+
+  {% if registros %}
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha y hora</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Módulo</th>
+            <th>ID del registro</th>
+            <th>Dirección IP</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for registro in registros %}
+            <tr>
+              <td>{{ registro.fecha_hora|date:"d/m/Y H:i:s" }}</td>
+
+              <td>
+                {{ registro.usuario|default:"Usuario desconocido" }}
+              </td>
+
+              <td>{{ registro.accion }}</td>
+              <td>{{ registro.modelo }}</td>
+              <td>{{ registro.registro_id }}</td>
+              <td>{{ registro.ip|default:"—" }}</td>
+
+              <td>
+                {% if registro.detalle %}
+                  <details>
+                    <summary>Ver detalle</summary>
+                    <pre class="detalle-auditoria">{{ registro.detalle }}</pre>
+                  </details>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>No se encontraron registros de auditoría.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

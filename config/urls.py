@@ -68,6 +68,13 @@ urlpatterns = [
   # Pantalla principal
   path('', usuarios_views.inicio, name='inicio'),
 
+  # Auditoria
+  path(
+    'auditoria/',
+    usuarios_views.lista_auditoria,
+    name='lista_auditoria',
+  ),
+
   # Modulos
   path('pacientes/', include('pacientes.urls')),
   path('agenda/', include('agenda.urls')),

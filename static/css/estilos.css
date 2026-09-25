@@ -1413,3 +1413,85 @@ legend {
   }
 
 }
+
+/* ===== Correccion definitiva de la tabla de auditoria ===== */
+
+.tabla-contenedor {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto;
+}
+
+.tabla-contenedor table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* Distribucion fija de las columnas */
+.tabla-contenedor th:nth-child(1),
+.tabla-contenedor td:nth-child(1) {
+  width: 17%;
+}
+
+.tabla-contenedor th:nth-child(2),
+.tabla-contenedor td:nth-child(2) {
+  width: 12%;
+}
+
+.tabla-contenedor th:nth-child(3),
+.tabla-contenedor td:nth-child(3) {
+  width: 10%;
+}
+
+.tabla-contenedor th:nth-child(4),
+.tabla-contenedor td:nth-child(4) {
+  width: 10%;
+}
+
+.tabla-contenedor th:nth-child(5),
+.tabla-contenedor td:nth-child(5) {
+  width: 10%;
+}
+
+.tabla-contenedor th:nth-child(6),
+.tabla-contenedor td:nth-child(6) {
+  width: 11%;
+}
+
+.tabla-contenedor th:nth-child(7),
+.tabla-contenedor td:nth-child(7) {
+  width: 30%;
+}
+
+/* Evitar que el contenido de las celdas ensanche la tabla */
+.tabla-contenedor td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Cuadro blanco para el detalle */
+.tabla-contenedor .detalle-auditoria {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  max-height: 220px;
+  margin-top: 10px;
+  padding: 12px;
+
+  overflow: auto !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+
+  background: #ffffff;
+  color: #263445;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+
+  font-size: 12px;
+  line-height: 1.5;
+}

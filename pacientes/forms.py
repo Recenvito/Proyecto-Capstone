@@ -23,7 +23,7 @@ class PacienteForm(BaseForm):
         fields = [
             'rut', 'nombres', 'apellido_paterno', 'apellido_materno',
             'fecha_nacimiento', 'sexo', 'prevision', 'direccion', 'comuna',
-            'colegio', 'curso', 'derivado_por', 'activo',
+            'colegio', 'curso', 'derivado_por',
         ]
         widgets = {
             'fecha_nacimiento': forms.DateInput(

@@ -10,7 +10,8 @@ from datetime import date, datetime, time, timedelta
 from django.utils import timezone
 
 from agenda.models import Cita, Disponibilidad
-from pacientes.models import AntecedentesNeurologicos, Diagnostico, Paciente, Tutor
+from pacientes.models import (AsignacionProfesional, AntecedentesNeurologicos,
+                              Diagnostico, Paciente, Tutor)
 from usuarios.models import Usuario
 
 # ---------- Usuarios ----------
@@ -173,6 +174,13 @@ for rut, nom, ap, am, fnac, sexo, tutor, parent, fono, diag, cie in demo:
                                    fecha_diagnostico=date.today() - timedelta(days=120),
                                    registrado_por=doctora)
 
+# ---------- Asignacion de pacientes a la doctora ----------
+# Sin esto la doctora no puede abrir ninguna ficha: el acceso clinico exige
+# que el profesional tenga asignado al paciente.
+for p in Paciente.objects.all():
+    AsignacionProfesional.objects.get_or_create(
+        paciente=p, profesional=doctora, defaults={'activa': True})
+
 # ---------- Citas de hoy ----------
 tz = timezone.get_current_timezone()
 hoy = timezone.localdate()
@@ -195,6 +203,7 @@ print('=' * 55)
 print(f'Pacientes : {Paciente.objects.count()}')
 print(f'Citas     : {Cita.objects.count()}')
 print(f'Usuarios  : {Usuario.objects.count()}')
+print(f'Asignaciones: {AsignacionProfesional.objects.count()}')
 print()
 print('Usuarios para entrar al sistema (SOLO desarrollo local):')
 print('  admin       / admin123    -> administrador')

@@ -1,10 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import Usuario, AuditoriaAcceso, Auditoria
+from .forms import UsuarioChangeForm, UsuarioCreationForm
 
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
+    form = UsuarioChangeForm
+    add_form = UsuarioCreationForm
     list_display = ('username', 'get_full_name', 'rol', 'email', 'is_active')
     list_filter = ('rol', 'is_active', 'is_staff')
     search_fields = ('username', 'first_name', 'last_name', 'rut', 'email')

@@ -7,6 +7,7 @@ Nunca usar estos usuarios en el sistema real de la consulta.
 """
 from datetime import date, datetime, time, timedelta
 
+from django.conf import settings
 from django.utils import timezone
 
 from agenda.models import Cita, Disponibilidad
@@ -14,12 +15,19 @@ from pacientes.models import (AsignacionProfesional, AntecedentesNeurologicos,
                               Diagnostico, Paciente, Tutor)
 from usuarios.models import Usuario
 
+if not settings.DEBUG:
+    raise RuntimeError('Los datos ficticios solo se pueden cargar con DEBUG=1.')
+
 # ---------- Usuarios ----------
 admin, creado = Usuario.objects.get_or_create(
     username='admin',
     defaults={'first_name': 'Administrador', 'last_name': 'Sistema',
+              'email': 'admin@ejemplo.test',
               'rol': Usuario.Rol.ADMIN, 'is_staff': True, 'is_superuser': True},
 )
+if not admin.email:
+    admin.email = 'admin@ejemplo.test'
+    admin.save(update_fields=['email'])
 if creado:
     admin.set_password('admin123')
     admin.save()
@@ -27,18 +35,40 @@ if creado:
 doctora, creado = Usuario.objects.get_or_create(
     username='dra.neuro',
     defaults={'first_name': 'Maria Jose', 'last_name': 'Rivas',
+              'email': 'dra.neuro@ejemplo.test',
               'rol': Usuario.Rol.MEDICO, 'is_staff': True,
               'especialidad': 'Neurologia infantil'},
 )
+if not doctora.email:
+    doctora.email = 'dra.neuro@ejemplo.test'
+    doctora.save(update_fields=['email'])
 if creado:
     doctora.set_password('demo1234')
     doctora.save()
 
+doctora_dos, creado = Usuario.objects.get_or_create(
+    username='dra.psico',
+    defaults={'first_name': 'Camila', 'last_name': 'Fuentes',
+              'email': 'dra.psico@ejemplo.test',
+              'rol': Usuario.Rol.MEDICO, 'is_staff': True,
+              'especialidad': 'Psicologia infantil'},
+)
+if not doctora_dos.email:
+    doctora_dos.email = 'dra.psico@ejemplo.test'
+    doctora_dos.save(update_fields=['email'])
+if creado:
+    doctora_dos.set_password('demo1234')
+    doctora_dos.save()
+
 secretaria, creado = Usuario.objects.get_or_create(
     username='secretaria',
     defaults={'first_name': 'Carolina', 'last_name': 'Soto',
+              'email': 'secretaria@ejemplo.test',
               'rol': Usuario.Rol.SECRETARIA},
 )
+if not secretaria.email:
+    secretaria.email = 'secretaria@ejemplo.test'
+    secretaria.save(update_fields=['email'])
 if creado:
     secretaria.set_password('demo1234')
     secretaria.save()
@@ -53,138 +83,103 @@ for dia in [Disponibilidad.DiaSemana.LUNES, Disponibilidad.DiaSemana.MIERCOLES,
     )
 
 # ---------- Pacientes ----------
-demo = [
+from pacientes.datos_prueba import PACIENTES_DEMO as demo
 
-    # 1
-    ('20123456-7', 'Matias Ignacio', 'Perez', 'Gonzalez', date(2017, 3, 14), 'M',
-     'Ana Maria Gonzalez', 'MADRE', '+56 9 8765 4321',
-     'Trastorno por deficit atencional', 'F90.0'),
-
-    # 2
-    ('21987654-3', 'Sofia Antonia', 'Munoz', 'Lara', date(2019, 8, 2), 'F',
-     'Pedro Munoz', 'PADRE', '+56 9 1234 5678',
-     'Epilepsia focal', 'G40.2'),
-
-    # 3
-    ('22456789-1', 'Benjamin', 'Rojas', 'Castro', date(2023, 11, 20), 'M',
-     'Claudia Castro', 'MADRE', '+56 9 5555 1234',
-     'Retraso del desarrollo psicomotor', 'F82'),
-
-    # 4
-    ('20543218-6', 'Isidora Fernanda', 'Soto', 'Navarro', date(2018, 5, 21), 'F',
-     'Carolina Navarro', 'MADRE', '+56 9 6123 4587',
-     'Trastorno del lenguaje', 'F80.9'),
-
-    # 5
-    ('21784563-2', 'Vicente Alejandro', 'Contreras', 'Molina', date(2016, 9, 8), 'M',
-     'Jorge Contreras', 'PADRE', '+56 9 7345 2198',
-     'Trastorno por deficit atencional', 'F90.0'),
-
-    # 6
-    ('22653147-8', 'Emilia Josefa', 'Araya', 'Fuentes', date(2020, 1, 17), 'F',
-     'Marcela Fuentes', 'MADRE', '+56 9 8456 3271',
-     'Retraso del desarrollo psicomotor', 'F82'),
-
-    # 7
-    ('19876543-5', 'Tomas Ignacio', 'Silva', 'Paredes', date(2015, 7, 29), 'M',
-     'Daniela Paredes', 'MADRE', '+56 9 9234 6712',
-     'Epilepsia focal', 'G40.2'),
-
-    # 8
-    ('21345678-9', 'Florencia Paz', 'Vargas', 'Reyes', date(2018, 12, 4), 'F',
-     'Rodrigo Vargas', 'PADRE', '+56 9 4567 8912',
-     'Trastorno del lenguaje', 'F80.9'),
-
-    # 9
-    ('22874561-4', 'Agustin', 'Castillo', 'Bravo', date(2021, 4, 13), 'M',
-     'Patricia Bravo', 'MADRE', '+56 9 6789 2341',
-     'Retraso del desarrollo psicomotor', 'F82'),
-
-    # 10
-    ('20431876-3', 'Catalina Sofia', 'Herrera', 'Diaz', date(2017, 10, 25), 'F',
-     'Luis Herrera', 'PADRE', '+56 9 8123 4567',
-     'Trastorno por deficit atencional', 'F90.0'),
-
-    # 11
-    ('21654328-7', 'Joaquin Andres', 'Navarro', 'Torres', date(2016, 2, 11), 'M',
-     'Paula Torres', 'MADRE', '+56 9 5678 1234',
-     'Epilepsia focal', 'G40.2'),
-
-    # 12
-    ('22317894-5', 'Antonia Paz', 'Espinoza', 'Rojas', date(2019, 6, 30), 'F',
-     'Miguel Espinoza', 'PADRE', '+56 9 7456 2189',
-     'Trastorno del lenguaje', 'F80.9'),
-
-    # 13
-    ('20987631-2', 'Lucas Benjamin', 'Pino', 'Morales', date(2020, 9, 16), 'M',
-     'Andrea Morales', 'MADRE', '+56 9 6345 7891',
-     'Retraso del desarrollo psicomotor', 'F82'),
-
-    # 14
-    ('22154367-8', 'Martina Ignacia', 'Salazar', 'Vega', date(2018, 3, 7), 'F',
-     'Cristian Salazar', 'PADRE', '+56 9 8234 5671',
-     'Trastorno por deficit atencional', 'F90.0'),
-
-    # 15
-    ('20765432-1', 'Gabriel Antonio', 'Leiva', 'Mendoza', date(2015, 11, 19), 'M',
-     'Valentina Mendoza', 'MADRE', '+56 9 9123 6745',
-     'Epilepsia focal', 'G40.2'),
-
-    # 16
-    ('21893245-6', 'Agustina Maria', 'Fuentes', 'Carrasco', date(2021, 7, 23), 'F',
-     'Sebastian Carrasco', 'PADRE', '+56 9 5346 7812',
-     'Retraso del desarrollo psicomotor', 'F82'),
-
-    # 17
-    ('22567134-9', 'Maximiliano', 'Reyes', 'Sanhueza', date(2017, 1, 28), 'M',
-     'Marcela Sanhueza', 'MADRE', '+56 9 6874 2315',
-     'Trastorno del lenguaje', 'F80.9'),
-
-    # 18
-    ('20345671-5', 'Josefa Fernanda', 'Molina', 'Cortes', date(2019, 10, 12), 'F',
-     'Felipe Molina', 'PADRE', '+56 9 7564 1892',
-     'Trastorno por deficit atencional', 'F90.0'),
-
-    # 19
-    ('21456783-4', 'Diego Nicolas', 'Paredes', 'Guzman', date(2016, 6, 5), 'M',
-     'Carolina Guzman', 'MADRE', '+56 9 8345 6721',
-     'Epilepsia focal', 'G40.2'),
-
-    # 20
-    ('22913456-7', 'Valentina Sofia', 'Bravo', 'Cisternas', date(2020, 12, 9), 'F',
-     'Rodrigo Cisternas', 'PADRE', '+56 9 6234 8951',
-     'Retraso del desarrollo psicomotor', 'F82'),
-
-]
-
-for rut, nom, ap, am, fnac, sexo, tutor, parent, fono, diag, cie in demo:
+pacientes_demo = []
+for indice, (rut, nom, ap, am, fnac, sexo, tutor, parent, fono, diag, cie) in enumerate(demo, start=1):
     p, creado = Paciente.objects.get_or_create(
         rut=rut,
         defaults={'nombres': nom, 'apellido_paterno': ap, 'apellido_materno': am,
                   'fecha_nacimiento': fnac, 'sexo': sexo, 'comuna': 'Santiago',
+                  'direccion': f'{100 + indice} Calle de Prueba',
+                  'prevision': 'FONASA', 'colegio': f'Escuela de Prueba {indice:02}',
+                  'curso': f'{1 + (indice % 8)}° básico',
                   'derivado_por': 'Pediatra tratante'},
     )
-    if creado:
-        Tutor.objects.create(paciente=p, nombre_completo=tutor, parentesco=parent,
-                             telefono=fono, es_principal=True)
-        AntecedentesNeurologicos.objects.create(
-            paciente=p, semanas_gestacion=38, peso_nacimiento_gramos=3200,
-            tipo_parto='VAGINAL', edad_marcha=13, edad_primeras_palabras=12)
-        Diagnostico.objects.create(paciente=p, descripcion=diag, codigo_cie10=cie,
-                                   fecha_diagnostico=date.today() - timedelta(days=120),
-                                   registrado_por=doctora)
+    if (p.nombres, p.apellido_paterno, p.apellido_materno, p.fecha_nacimiento) != (nom, ap, am, fnac):
+        raise RuntimeError(f'El RUT {rut} ya está asociado a un paciente distinto; se canceló la carga.')
+    pacientes_demo.append(p)
 
-# ---------- Asignacion de pacientes a la doctora ----------
+    # Completar ficha de demostración existente sin sobrescribir campos poblados.
+    for campo, valor in {
+        'direccion': f'{100 + indice} Calle de Prueba',
+        'comuna': 'Santiago',
+        'prevision': 'FONASA',
+        'colegio': f'Escuela de Prueba {indice:02}',
+        'curso': f'{1 + (indice % 8)}° básico',
+        'derivado_por': 'Pediatra tratante (dato ficticio)',
+    }.items():
+        if not getattr(p, campo):
+            setattr(p, campo, valor)
+    p.save()
+
+    if creado:
+        AntecedentesNeurologicos.objects.create(
+            paciente=p, semanas_gestacion=38, peso_nacimiento_gramos=3200 + indice * 8,
+            tipo_parto='VAGINAL', edad_marcha=13, edad_primeras_palabras=12,
+            antecedentes_familiares='Sin antecedentes familiares relevantes (dato ficticio)',
+            antecedentes_morbidos='Sin antecedentes mórbidos referidos (dato ficticio)',
+            alergias='Sin alergias conocidas (dato ficticio)',
+            medicamentos_actuales='Sin medicamentos actuales (dato ficticio)')
+    else:
+        antecedentes, _ = AntecedentesNeurologicos.objects.get_or_create(
+            paciente=p,
+            defaults={'semanas_gestacion': 38,
+                      'peso_nacimiento_gramos': 3200 + indice * 8,
+                      'tipo_parto': 'VAGINAL', 'edad_marcha': 13,
+                      'edad_primeras_palabras': 12},
+        )
+        for campo, valor in {
+            'semanas_gestacion': 38,
+            'peso_nacimiento_gramos': 3200 + indice * 8,
+            'edad_marcha': 13,
+            'edad_primeras_palabras': 12,
+            'antecedentes_familiares': 'Sin antecedentes familiares relevantes (dato ficticio)',
+            'antecedentes_morbidos': 'Sin antecedentes mórbidos referidos (dato ficticio)',
+            'alergias': 'Sin alergias conocidas (dato ficticio)',
+            'medicamentos_actuales': 'Sin medicamentos actuales (dato ficticio)',
+        }.items():
+            if not getattr(antecedentes, campo):
+                setattr(antecedentes, campo, valor)
+        antecedentes.save()
+    Tutor.objects.get_or_create(
+        paciente=p,
+        es_principal=True,
+        defaults={'nombre_completo': tutor, 'parentesco': parent, 'telefono': fono,
+                  'email': f'apoderado{indice:02}@ejemplo.test',
+                  'rut': f'99{indice:06}-0'},
+    )
+    tutor_obj = Tutor.objects.get(paciente=p, es_principal=True)
+    campos_tutor = []
+    if not tutor_obj.email:
+        tutor_obj.email = f'apoderado{indice:02}@ejemplo.test'
+        campos_tutor.append('email')
+    if not tutor_obj.rut:
+        tutor_obj.rut = f'99{indice:06}-0'
+        campos_tutor.append('rut')
+    if campos_tutor:
+        tutor_obj.save(update_fields=campos_tutor)
+    Diagnostico.objects.get_or_create(
+        paciente=p,
+        codigo_cie10=cie,
+        defaults={'descripcion': diag,
+                  'fecha_diagnostico': date.today() - timedelta(days=120),
+                  'registrado_por': doctora,
+                  'notas': 'Registro ficticio de prueba; requiere validación clínica.'},
+    )
+
+# ---------- Asignacion de los pacientes demo ----------
 # Sin esto la doctora no puede abrir ninguna ficha: el acceso clinico exige
 # que el profesional tenga asignado al paciente.
-for p in Paciente.objects.all():
-    AsignacionProfesional.objects.get_or_create(
-        paciente=p, profesional=doctora, defaults={'activa': True})
+for indice, p in enumerate(pacientes_demo):
+    profesional = doctora if indice % 2 == 0 else doctora_dos
+    AsignacionProfesional.objects.update_or_create(
+        paciente=p, profesional=profesional, defaults={'activa': True})
 
 # ---------- Citas de hoy ----------
 tz = timezone.get_current_timezone()
 hoy = timezone.localdate()
-pacientes = list(Paciente.objects.all()[:3])
+pacientes = pacientes_demo[:3]
 
 for i, p in enumerate(pacientes):
     inicio = timezone.make_aware(
@@ -204,8 +199,10 @@ print(f'Pacientes : {Paciente.objects.count()}')
 print(f'Citas     : {Cita.objects.count()}')
 print(f'Usuarios  : {Usuario.objects.count()}')
 print(f'Asignaciones: {AsignacionProfesional.objects.count()}')
+print(f'Pacientes de prueba preparados: {len(pacientes_demo)}')
 print()
 print('Usuarios para entrar al sistema (SOLO desarrollo local):')
 print('  admin       / admin123    -> administrador')
 print('  dra.neuro   / demo1234    -> medico (ve la ficha clinica)')
+print('  dra.psico   / demo1234    -> medico (ve sus pacientes asignados)')
 print('  secretaria  / demo1234    -> secretaria (NO ve la ficha clinica)')

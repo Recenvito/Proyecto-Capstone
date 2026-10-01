@@ -8,11 +8,23 @@ para el profesional que tiene asignado a ese paciente.
 Ejecutar con:  ./venv/bin/python manage.py test
 """
 from datetime import date
+import re
+from io import StringIO
 
+from django.core import mail
+from django.core.management import call_command
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 
-from pacientes.models import AsignacionProfesional, Paciente
+from pacientes.models import (
+    AsignacionProfesional,
+    AntecedentesNeurologicos,
+    Diagnostico,
+    Paciente,
+    Tutor,
+)
+from usuarios.forms import UsuarioCreationForm
 from usuarios.models import Usuario
 
 
@@ -115,3 +127,132 @@ class ControlDeAccesoTest(TestCase):
         self.client.force_login(self.secretaria)
         respuesta = self.client.get(reverse('agenda:calendario'))
         self.assertEqual(respuesta.status_code, 200)
+
+
+class RecuperacionContrasenaTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.usuario = Usuario.objects.create_user(
+            username='usuario_recuperacion',
+            email='recuperacion@example.test',
+            password='Clave-inicial-123',
+            is_active=True,
+        )
+
+    def test_correo_es_obligatorio_y_unico_al_crear_usuarios(self):
+        form_sin_correo = UsuarioCreationForm(data={
+            'username': 'sin_correo',
+            'password1': 'Clave-segura-456',
+            'password2': 'Clave-segura-456',
+        })
+        self.assertFalse(form_sin_correo.is_valid())
+        self.assertIn('email', form_sin_correo.errors)
+
+        form_correo_repetido = UsuarioCreationForm(data={
+            'username': 'correo_repetido',
+            'email': 'RECUPERACION@example.test',
+            'password1': 'Clave-segura-456',
+            'password2': 'Clave-segura-456',
+        })
+        self.assertFalse(form_correo_repetido.is_valid())
+        self.assertIn('email', form_correo_repetido.errors)
+
+    def test_pagina_admin_para_agregar_usuario_carga(self):
+        administrador = Usuario.objects.create_superuser(
+            username='admin_alta_test',
+            email='admin_alta@example.test',
+            password='Clave-admin-123',
+        )
+        self.client.force_login(administrador)
+
+        respuesta = self.client.get(reverse('admin:usuarios_usuario_add'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Correo electrónico')
+        self.assertContains(respuesta, 'usable_password')
+
+        respuesta = self.client.post(reverse('admin:usuarios_usuario_add'), {
+            'username': 'medico_nuevo_admin',
+            'usable_password': 'true',
+            'password1': 'Clave-segura-Admin-987',
+            'password2': 'Clave-segura-Admin-987',
+            'first_name': 'Medico',
+            'last_name': 'Nuevo',
+            'email': 'medico_nuevo@example.test',
+            'rut': '12345678-5',
+            'telefono': '+56 9 1234 5678',
+            'rol': Usuario.Rol.MEDICO,
+        }, follow=True)
+
+        self.assertEqual(respuesta.status_code, 200)
+        creado = Usuario.objects.get(username='medico_nuevo_admin')
+        self.assertEqual(creado.email, 'medico_nuevo@example.test')
+        self.assertTrue(creado.check_password('Clave-segura-Admin-987'))
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        DEFAULT_FROM_EMAIL='NeuroFicha <no-reply@example.test>',
+    )
+    def test_solicitud_envia_enlace_de_un_solo_uso(self):
+        respuesta = self.client.post(reverse('password_reset'), {
+            'email': self.usuario.email,
+        })
+
+        self.assertRedirects(respuesta, reverse('password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.usuario.email])
+        enlace = re.search(r'https?://[^\s]+/reset/[^\s]+', mail.outbox[0].body)
+        self.assertIsNotNone(enlace)
+
+        confirmacion = self.client.get(enlace.group(0))
+        self.assertEqual(confirmacion.status_code, 302)
+        url_confirmacion = confirmacion.url
+        pagina = self.client.get(url_confirmacion)
+        self.assertEqual(pagina.status_code, 200)
+        self.assertContains(pagina, 'Crear una contraseña nueva')
+
+        respuesta = self.client.post(url_confirmacion, {
+            'new_password1': 'Otra-Clave-segura-789',
+            'new_password2': 'Otra-Clave-segura-789',
+        })
+        self.assertRedirects(respuesta, reverse('password_reset_complete'))
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password('Otra-Clave-segura-789'))
+
+
+class CargaPacientesDemoTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.medicos = [
+            Usuario.objects.create_user(
+                username=f'medico_demo_{i}',
+                email=f'medico{i}@example.test',
+                password='Clave-de-prueba-123',
+                rol=Usuario.Rol.MEDICO,
+            )
+            for i in (1, 2)
+        ]
+
+    @override_settings(DEBUG=True)
+    def test_carga_veinte_fichas_completas_y_es_idempotente(self):
+        call_command('cargar_pacientes_demo', stdout=StringIO())
+
+        self.assertEqual(Paciente.objects.count(), 20)
+        self.assertEqual(Tutor.objects.count(), 20)
+        self.assertEqual(AntecedentesNeurologicos.objects.count(), 20)
+        self.assertEqual(Diagnostico.objects.count(), 20)
+        self.assertEqual(AsignacionProfesional.objects.count(), 20)
+        self.assertEqual(
+            AsignacionProfesional.objects.values('profesional_id').distinct().count(),
+            2,
+        )
+        self.assertTrue(
+            all(paciente.edad >= 0 for paciente in Paciente.objects.all())
+        )
+        self.assertTrue(
+            all(paciente.tutores.filter(email__endswith='@ejemplo.test').exists()
+                for paciente in Paciente.objects.all())
+        )
+
+        call_command('cargar_pacientes_demo', stdout=StringIO())
+        self.assertEqual(Paciente.objects.count(), 20)

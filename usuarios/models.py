@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.apps import apps
 from django.db import models
 
 
@@ -33,7 +34,7 @@ class Usuario(AbstractUser):
     )
     telefono = models.CharField(max_length=20, blank=True, verbose_name='Telefono')
 
-    # Solo aplica a los medicos
+    profesion = models.CharField(max_length=100, blank=True, verbose_name='Profesion', help_text='Ej: Medico, psicologo/a, fonoaudiologo/a.')
     especialidad = models.CharField(
         max_length=100,
         blank=True,
@@ -51,6 +52,18 @@ class Usuario(AbstractUser):
         verbose_name_plural = 'Usuarios'
         ordering = ['first_name', 'last_name']
 
+    def set_password(self, raw_password):
+        if self.pk and raw_password and self.has_usable_password() and not self.check_password(raw_password):
+            historial = apps.get_model('usuarios', 'HistorialContrasena')
+            historial.objects.create(usuario_id=self.pk, password_hash=self.password)
+            conservar = list(
+                historial.objects.filter(usuario_id=self.pk)
+                .order_by('-fecha_cambio', '-pk').values_list('pk', flat=True)[5:]
+            )
+            if conservar:
+                historial.objects.filter(pk__in=conservar).delete()
+        super().set_password(raw_password)
+
     def __str__(self):
         nombre = self.get_full_name() or self.username
         return f'{nombre} ({self.get_rol_display()})'
@@ -67,6 +80,20 @@ class Usuario(AbstractUser):
     def puede_ver_ficha_clinica(self):
         """Solo el personal medico accede al contenido clinico."""
         return self.rol in (self.Rol.MEDICO, self.Rol.ADMIN)
+
+
+class HistorialContrasena(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='historial_contrasenas')
+    password_hash = models.CharField(max_length=128)
+    fecha_cambio = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha_cambio']
+        verbose_name = 'Historial de contraseña'
+        verbose_name_plural = 'Historial de contraseñas'
+
+    def __str__(self):
+        return f'Cambio de contraseña de {self.usuario} el {self.fecha_cambio:%d/%m/%Y}'
 
 class AuditoriaAcceso(models.Model):
   """Registro de accesos y cierres de sesion."""

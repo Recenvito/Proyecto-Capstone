@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -11,8 +12,8 @@ from usuarios.permisos import (
   puede_gestionar_paciente,
   solo_clinico,
 )
-from .forms import AntecedentesForm, AtencionForm, PacienteForm, TutorFormSet
-from .models import AntecedentesNeurologicos, Atencion, Paciente
+from .forms import AntecedentesForm, AtencionForm, DiagnosticoForm, PacienteForm, TutorFormSet
+from .models import AntecedentesNeurologicos, AsignacionProfesional, Atencion, Diagnostico, Paciente
 from usuarios.models import Auditoria
 
 
@@ -82,12 +83,15 @@ def detalle(request, pk):
     'diagnosticos': [],
     'atenciones': [],
     'antecedentes': None,
+    'asignaciones_profesionales': paciente.asignaciones_profesionales.filter(
+      activa=True
+    ).select_related('profesional').order_by('profesional__first_name', 'profesional__last_name'),
   }
 
   if acceso_clinico:
     contexto.update({
-      'diagnosticos': paciente.diagnosticos.all(),
-      'atenciones': paciente.atenciones.select_related('profesional')[:20],
+      'diagnosticos': paciente.diagnosticos.select_related('registrado_por').all(),
+      'atenciones': paciente.atenciones.select_related('profesional').order_by('-fecha')[:50],
       'antecedentes': getattr(paciente, 'antecedentes', None),
     })
 
@@ -96,20 +100,18 @@ def detalle(request, pk):
 @login_required
 def crear(request):
   """Alta de un paciente nuevo, junto con sus tutores."""
+  if not puede_gestionar_paciente(request.user):
+    raise PermissionDenied('Solo administración o secretaría puede crear pacientes.')
   if request.method == 'POST':
     form = PacienteForm(request.POST)
     formset = TutorFormSet(request.POST)
 
-    if form.is_valid():
-      paciente = form.save()
-      formset = TutorFormSet(request.POST, instance=paciente)
-
-      if formset.is_valid():
+    if form.is_valid() and formset.is_valid():
+      with transaction.atomic():
+        paciente = form.save()
+        formset.instance = paciente
         formset.save()
-
-      AntecedentesNeurologicos.objects.get_or_create(
-        paciente=paciente
-      )
+        AntecedentesNeurologicos.objects.get_or_create(paciente=paciente)
 
       Auditoria.objects.create(
         usuario=request.user,
@@ -251,6 +253,15 @@ def editar_antecedentes(request, pk):
     antecedentes, _ = AntecedentesNeurologicos.objects.get_or_create(
         paciente=paciente
     )
+    if request.method == 'GET':
+        Auditoria.objects.create(
+            usuario=request.user,
+            accion=Auditoria.Accion.CONSULTAR,
+            modelo='AntecedentesNeurologicos',
+            registro_id=antecedentes.pk,
+            ip=request.META.get('REMOTE_ADDR'),
+            detalle={'evento': 'Acceso a antecedentes clinicos', 'paciente_id': paciente.pk},
+        )
     if request.method == 'POST':
         form = AntecedentesForm(
             request.POST,
@@ -332,6 +343,35 @@ def crear_atencion(request, pk):
         'paciente': paciente,
     })
 
+
+@login_required
+@solo_clinico
+def crear_diagnostico(request, pk):
+    paciente = get_object_or_404(Paciente, pk=pk)
+    if request.method == 'POST':
+        form = DiagnosticoForm(request.POST)
+        if form.is_valid():
+            diagnostico = form.save(commit=False)
+            diagnostico.paciente = paciente
+            diagnostico.registrado_por = request.user
+            diagnostico.save()
+            Auditoria.objects.create(
+                usuario=request.user,
+                accion=Auditoria.Accion.CREAR,
+                modelo='Diagnostico',
+                registro_id=diagnostico.pk,
+                ip=request.META.get('REMOTE_ADDR'),
+                detalle={'paciente_id': paciente.pk, 'evento': 'Registro de diagnostico clinico'},
+            )
+            messages.success(request, 'Diagnóstico registrado en la ficha.')
+            return redirect('pacientes:detalle', pk=paciente.pk)
+    else:
+        form = DiagnosticoForm(initial={'fecha_diagnostico': timezone.localdate()})
+    return render(request, 'pacientes/diagnostico_form.html', {
+        'form': form,
+        'paciente': paciente,
+    })
+
 @login_required
 def buscar(request):
   """Busqueda de pacientes segun el acceso del usuario."""
@@ -376,6 +416,18 @@ def buscar(request):
 
 
 @login_required
+def historial_asignaciones(request):
+  if request.user.rol != 'ADMIN':
+    return render(request, '403.html', status=403)
+  asignaciones = AsignacionProfesional.objects.select_related(
+    'paciente', 'profesional'
+  ).order_by('-fecha_asignacion')
+  return render(request, 'pacientes/historial_asignaciones.html', {
+    'asignaciones': asignaciones,
+  })
+
+
+@login_required
 def detalle_atencion(request, pk):
   """Detalle de una atencion con acceso segun paciente asignado."""
   atencion = get_object_or_404(
@@ -387,6 +439,19 @@ def detalle_atencion(request, pk):
     raise PermissionDenied(
       'No tienes acceso a la ficha clinica de este paciente.'
     )
+
+  Auditoria.objects.create(
+    usuario=request.user,
+    accion=Auditoria.Accion.CONSULTAR,
+    modelo='Atencion',
+    registro_id=atencion.pk,
+    ip=request.META.get('REMOTE_ADDR'),
+    detalle={
+      'evento': 'Acceso a detalle de atencion',
+      'paciente_id': atencion.paciente_id,
+      'profesional_id': atencion.profesional_id,
+    },
+  )
 
   return render(request, 'pacientes/atencion_detalle.html', {
     'atencion': atencion,

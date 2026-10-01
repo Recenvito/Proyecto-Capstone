@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from django.test import TestCase
 
+from .forms import PacienteForm, TutorForm
 from .models import Paciente
 
 
@@ -38,3 +39,40 @@ class PacienteTest(TestCase):
             rut='88888888-8', nombres='Ana', apellido_paterno='Vega',
             fecha_nacimiento=date(2015, 6, 1), sexo='F')
         self.assertEqual(paciente.nombre_completo, 'Ana Vega')
+
+
+class ValidacionesFichaTest(TestCase):
+    def test_valida_rut_nombre_y_fecha_de_nacimiento(self):
+        datos = {
+            'rut': '12.345.678-5',
+            'nombres': 'María José',
+            'apellido_paterno': 'Muñoz-López',
+            'apellido_materno': 'D’Ávila',
+            'fecha_nacimiento': '2018-05-10',
+            'sexo': Paciente.Sexo.FEMENINO,
+            'prevision': Paciente.Prevision.FONASA,
+        }
+        self.assertTrue(PacienteForm(data=datos).is_valid())
+
+        datos['rut'] = '12.345.678-1'
+        self.assertIn('rut', PacienteForm(data=datos).errors)
+        datos['rut'] = '12.345.678-5'
+        datos['nombres'] = 'María123'
+        self.assertIn('nombres', PacienteForm(data=datos).errors)
+        datos['nombres'] = 'María'
+        datos['fecha_nacimiento'] = '2099-01-01'
+        self.assertIn('fecha_nacimiento', PacienteForm(data=datos).errors)
+
+    def test_valida_telefono_y_correo_del_tutor(self):
+        datos = {
+            'nombre_completo': 'Camila Muñoz',
+            'rut': '11.111.111-1',
+            'parentesco': 'MADRE',
+            'telefono': 'solo palabras',
+            'email': 'no-es-correo',
+            'es_principal': 'on',
+        }
+        form = TutorForm(data=datos)
+        self.assertFalse(form.is_valid())
+        self.assertIn('telefono', form.errors)
+        self.assertIn('email', form.errors)

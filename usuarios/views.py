@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
@@ -45,14 +45,20 @@ def inicio(request):
   """Pantalla principal: resumen del dia."""
   ahora = timezone.now()
   hoy = timezone.localdate()
+  inicio_hoy = timezone.make_aware(
+    datetime.combine(hoy, datetime.min.time()), timezone.get_current_timezone()
+  )
+  inicio_manana = inicio_hoy + timedelta(days=1)
 
   citas_hoy = (
     Cita.objects
-    .filter(fecha_hora__date=hoy)
+    .filter(fecha_hora__gte=inicio_hoy, fecha_hora__lt=inicio_manana)
     .exclude(estado=Cita.Estado.CANCELADA)
     .select_related('paciente', 'profesional')
     .order_by('fecha_hora')
   )
+  if request.user.es_medico:
+    citas_hoy = citas_hoy.filter(profesional=request.user)
 
   proximas = (
     Cita.objects
@@ -60,13 +66,22 @@ def inicio(request):
     .exclude(fecha_hora__date=hoy)
     .exclude(estado=Cita.Estado.CANCELADA)
     .select_related('paciente')
-    .order_by('fecha_hora')[:8]
+    .order_by('fecha_hora')
   )
+  if request.user.es_medico:
+    proximas = proximas.filter(profesional=request.user)
+
+  pacientes_activos = Paciente.objects.filter(activo=True)
+  if request.user.es_medico:
+    pacientes_activos = pacientes_activos.filter(
+      asignaciones_profesionales__profesional=request.user,
+      asignaciones_profesionales__activa=True,
+    ).distinct()
 
   contexto = {
     'citas_hoy': citas_hoy,
     'proximas': proximas,
-    'total_pacientes': Paciente.objects.filter(activo=True).count(),
+    'total_pacientes': pacientes_activos.count(),
     'atendidas_hoy': citas_hoy.filter(
       estado=Cita.Estado.ATENDIDA
     ).count(),

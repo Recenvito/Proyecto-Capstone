@@ -9,7 +9,7 @@
   </div>
   <div class="acciones" style="margin:0">
     <a href="{% url 'agenda:agendar' %}" class="boton">+ Agendar hora</a>
-    <a href="{% url 'pacientes:crear' %}" class="boton boton-secundario">+ Nuevo paciente</a>
+    {% if user.rol == 'ADMIN' or user.rol == 'SECRETARIA' %}<a href="{% url 'pacientes:crear' %}" class="boton boton-secundario">+ Nuevo paciente</a>{% endif %}
   </div>
 </div>
 
@@ -24,7 +24,7 @@
   </div>
   <div class="indicador">
     <div class="numero">{{ total_pacientes }}</div>
-    <div class="etiqueta">Pacientes activos</div>
+    <div class="etiqueta">{% if user.es_medico %}Pacientes asignados{% else %}Pacientes activos{% endif %}</div>
   </div>
 </div>
 
@@ -41,7 +41,7 @@
               <a href="{% url 'pacientes:detalle' cita.paciente.pk %}">
                 {{ cita.paciente.nombre_completo }}</a>
               <div style="font-size:13px;color:var(--texto-suave)">
-                {{ cita.paciente.edad_texto }} &middot; {{ cita.get_tipo_display }}</div>
+                {{ cita.paciente.edad_texto }} · {{ cita.get_tipo_display }}{% if cita.motivo %} · {{ cita.motivo|truncatechars:55 }}{% endif %}</div>
             </td>
             <td style="text-align:right">
               <span class="estado estado-{{ cita.estado }}">{{ cita.get_estado_display }}</span>
@@ -63,11 +63,16 @@
         {% for cita in proximas %}
           <tr>
             <td style="width:110px">
-              <strong>{{ cita.fecha_hora|date:"D j/n" }}</strong>
+              <strong>{{ cita.fecha_hora|date:"D j/n" }}</strong><br>
               {{ cita.fecha_hora|date:"H:i" }}
             </td>
-            <td><a href="{% url 'pacientes:detalle' cita.paciente.pk %}">
-              {{ cita.paciente.nombre_completo }}</a></td>
+            <td>
+              <a href="{% url 'pacientes:detalle' cita.paciente.pk %}">{{ cita.paciente.nombre_completo }}</a>
+              <div style="font-size:13px;color:var(--texto-suave)">
+                {{ cita.paciente.edad_texto }} · {{ cita.get_tipo_display }}{% if cita.motivo %} · {{ cita.motivo|truncatechars:55 }}{% endif %}
+              </div>
+            </td>
+            <td style="text-align:right"><span class="estado estado-{{ cita.estado }}">{{ cita.get_estado_display }}</span></td>
           </tr>
         {% endfor %}
         </tbody>

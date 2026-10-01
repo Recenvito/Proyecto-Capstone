@@ -8,19 +8,19 @@ from .forms import UsuarioChangeForm, UsuarioCreationForm
 class UsuarioAdmin(UserAdmin):
     form = UsuarioChangeForm
     add_form = UsuarioCreationForm
-    list_display = ('username', 'get_full_name', 'rol', 'email', 'is_active')
+    list_display = ('username', 'get_full_name', 'rol', 'profesion', 'especialidad', 'email', 'is_active')
     list_filter = ('rol', 'is_active', 'is_staff')
     search_fields = ('username', 'first_name', 'last_name', 'rut', 'email')
 
     # Agregamos nuestros campos a los formularios que ya trae Django
     fieldsets = UserAdmin.fieldsets + (
         ('Datos del sistema', {
-            'fields': ('rol', 'rut', 'telefono', 'especialidad', 'registro_superintendencia'),
+            'fields': ('rol', 'rut', 'telefono', 'profesion', 'especialidad', 'registro_superintendencia'),
         }),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Datos del sistema', {
-            'fields': ('rol', 'first_name', 'last_name', 'email', 'rut', 'telefono'),
+            'fields': ('rol', 'first_name', 'last_name', 'email', 'rut', 'telefono', 'profesion', 'especialidad'),
         }),
     )
 

@@ -12,9 +12,7 @@
     </p>
   </div>
 
-  <a href="{% url 'pacientes:crear' %}" class="boton">
-    + Nuevo paciente
-  </a>
+  {% if user.rol == 'ADMIN' or user.rol == 'SECRETARIA' %}<a href="{% url 'pacientes:crear' %}" class="boton">+ Nuevo paciente</a>{% endif %}
 </div>
 
 <div class="tarjeta">
@@ -31,6 +29,8 @@
         class="input"
         value="{{ busqueda }}"
         placeholder="Buscar por nombre o RUT..."
+        aria-label="Buscar pacientes por nombre o RUT"
+        title="Escribe parte del nombre o del RUT"
         autocomplete="off"
       >
     </div>
@@ -233,6 +233,7 @@
       {% endif %}
 
     </div>
+    <table class="tabla-pacientes" style="display:none"><tbody></tbody></table>
 
   {% endif %}
 
@@ -240,89 +241,78 @@
 <script>
   const busqueda = document.getElementById('busqueda-pacientes');
   const tabla = document.querySelector('.tabla-pacientes tbody');
+  const tablaCompleta = tabla ? tabla.closest('table') : null;
+  const sinPacientes = document.querySelector('.tarjeta .vacio');
 
-  let temporizador;
+  if (!busqueda || !tabla) {
+    console.error('No se pudo inicializar la búsqueda de pacientes.');
+  } else {
+    let temporizador;
 
-  busqueda.addEventListener('input', function () {
-    clearTimeout(temporizador);
+    busqueda.addEventListener('input', function () {
+      clearTimeout(temporizador);
+      temporizador = setTimeout(function () {
+        actualizarPacientes(busqueda.value);
+      }, 250);
+    });
 
-    temporizador = setTimeout(function () {
-      actualizarPacientes(busqueda.value);
-    }, 250);
-  });
+    async function actualizarPacientes(texto) {
+      try {
+        const respuesta = await fetch(
+          "{% url 'pacientes:buscar' %}?q=" + encodeURIComponent(texto),
+          {headers: {'X-Requested-With': 'XMLHttpRequest'}}
+        );
+        if (!respuesta.ok) throw new Error('La búsqueda no está disponible.');
+        const datos = await respuesta.json();
+        tabla.replaceChildren();
+        if (tablaCompleta) tablaCompleta.style.display = '';
+        if (sinPacientes) sinPacientes.style.display = 'none';
 
-  async function actualizarPacientes(texto) {
-    try {
-      const respuesta = await fetch(
-        "{% url 'pacientes:buscar' %}?q=" +
-        encodeURIComponent(texto)
-      );
+        if (datos.pacientes.length === 0) {
+          const fila = document.createElement('tr');
+          const celda = document.createElement('td');
+          celda.colSpan = 6;
+          celda.className = 'vacio';
+          celda.textContent = 'No se encontraron pacientes.';
+          fila.appendChild(celda);
+          tabla.appendChild(fila);
+          return;
+        }
 
-      const datos = await respuesta.json();
+        datos.pacientes.forEach(function (paciente) {
+          const fila = document.createElement('tr');
+          const identidad = document.createElement('td');
+          const enlace = document.createElement('a');
+          enlace.href = '/pacientes/' + encodeURIComponent(paciente.id) + '/';
+          enlace.className = 'paciente-nombre';
+          const nombre = document.createElement('strong');
+          nombre.textContent = paciente.nombre;
+          enlace.appendChild(nombre);
+          const rut = document.createElement('span');
+          rut.className = 'paciente-rut';
+          rut.textContent = paciente.rut;
+          identidad.append(enlace, rut);
 
-      tabla.innerHTML = '';
-
-      if (datos.pacientes.length === 0) {
-        tabla.innerHTML = `
-          <tr>
-            <td colspan="6" class="vacio">
-              No se encontraron pacientes.
-            </td>
-          </tr>
-        `;
-        return;
+          const edad = document.createElement('td'); edad.textContent = paciente.edad;
+          const prevision = document.createElement('td'); prevision.textContent = paciente.prevision;
+          const tutor = document.createElement('td'); tutor.textContent = '—';
+          const estado = document.createElement('td');
+          const etiquetaEstado = document.createElement('span');
+          etiquetaEstado.className = 'estado estado-activo';
+          etiquetaEstado.textContent = 'Activo';
+          estado.appendChild(etiquetaEstado);
+          const accion = document.createElement('td'); accion.className = 'tabla-accion';
+          const ver = document.createElement('a');
+          ver.href = enlace.href;
+          ver.className = 'boton boton-secundario boton-pequeno';
+          ver.textContent = 'Ver ficha';
+          accion.appendChild(ver);
+          fila.append(identidad, edad, prevision, tutor, estado, accion);
+          tabla.appendChild(fila);
+        });
+      } catch (error) {
+        console.error('Error al buscar pacientes:', error);
       }
-
-      datos.pacientes.forEach(function (paciente) {
-        tabla.innerHTML += `
-          <tr>
-            <td>
-              <a
-                href="/pacientes/${paciente.id}/"
-                class="paciente-nombre"
-              >
-                <strong>${paciente.nombre}</strong>
-              </a>
-
-              <span class="paciente-rut">
-                ${paciente.rut}
-              </span>
-            </td>
-
-            <td>
-              ${paciente.edad}
-            </td>
-
-            <td>
-              ${paciente.prevision}
-            </td>
-
-            <td>
-              <span class="paciente-secundario">
-                —
-              </span>
-            </td>
-
-            <td>
-              <span class="estado estado-activo">
-                Activo
-              </span>
-            </td>
-
-            <td class="tabla-accion">
-              <a
-                href="/pacientes/${paciente.id}/"
-                class="boton boton-secundario boton-pequeno"
-              >
-                Ver ficha
-              </a>
-            </td>
-          </tr>
-        `;
-      });
-
-    } catch (error) {
-      console.error('Error al buscar pacientes:', error);
     }
   }
 </script>

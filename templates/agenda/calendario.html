@@ -12,13 +12,29 @@
 </div>
 
 <div class="tarjeta">
+  <form method="get" class="grid grid-3" style="align-items:end;margin-bottom:16px">
+    <input type="hidden" name="fecha" value="{{ dia|date:'Y-m-d' }}">
+    {% if profesional and not user.es_medico %}<input type="hidden" name="profesional" value="{{ profesional.pk }}">{% endif %}
+    <div>
+      <label for="busqueda-agenda">Buscar paciente o motivo</label>
+      <input id="busqueda-agenda" type="search" name="q" value="{{ busqueda }}" class="input"
+             placeholder="Nombre, RUT o motivo" autocomplete="off">
+      <p class="ayuda">La búsqueda se limita a la agenda del profesional seleccionado.</p>
+    </div>
+    <div class="acciones" style="margin:0">
+      <button type="submit" class="boton boton-chico">Buscar</button>
+      {% if busqueda %}<a class="boton boton-chico boton-secundario" href="?fecha={{ dia|date:'Y-m-d' }}{% if profesional and not user.es_medico %}&profesional={{ profesional.pk }}{% endif %}">Limpiar</a>{% endif %}
+    </div>
+  </form>
   <form method="get" class="navegacion-fecha">
-    <a href="?fecha={{ dia_anterior|date:'Y-m-d' }}{% if profesional %}&profesional={{ profesional.pk }}{% endif %}"
+    {% if busqueda %}<input type="hidden" name="q" value="{{ busqueda }}">{% endif %}
+    {% if profesional and not user.es_medico %}<input type="hidden" name="profesional" value="{{ profesional.pk }}">{% endif %}
+    <a href="?fecha={{ dia_anterior|date:'Y-m-d' }}{% if profesional and not user.es_medico %}&profesional={{ profesional.pk }}{% endif %}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}"
        class="boton boton-chico boton-secundario">&larr; Dia anterior</a>
 
     <input type="date" name="fecha" value="{{ dia|date:'Y-m-d' }}" class="input" style="width:auto">
 
-    {% if medicos|length > 1 %}
+    {% if medicos|length > 1 and not user.es_medico %}
       <select name="profesional" class="input" style="width:auto">
         {% for m in medicos %}
           <option value="{{ m.pk }}" {% if profesional.pk == m.pk %}selected{% endif %}>
@@ -29,7 +45,7 @@
 
     <button type="submit" class="boton boton-chico">Ver</button>
 
-    <a href="?fecha={{ dia_siguiente|date:'Y-m-d' }}{% if profesional %}&profesional={{ profesional.pk }}{% endif %}"
+    <a href="?fecha={{ dia_siguiente|date:'Y-m-d' }}{% if profesional and not user.es_medico %}&profesional={{ profesional.pk }}{% endif %}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}"
        class="boton boton-chico boton-secundario">Dia siguiente &rarr;</a>
 
     {% if dia != hoy %}
@@ -91,9 +107,55 @@
   {% endfor %}
 {% else %}
   <div class="tarjeta"><p class="vacio">
-    {{ profesional.get_full_name|default:profesional.username }} no tiene horario de atencion
-    definido para este dia.<br>
+    No hay bloques de atención configurados para esta fecha. Las citas existentes se muestran en los resultados y en la lista de próximas horas.<br>
     Configuralo en <a href="/admin/agenda/disponibilidad/add/">Administracion &rarr; Disponibilidades</a>.
   </p></div>
+{% endif %}
+
+{% if busqueda and profesional %}
+  <div class="tarjeta">
+    <h2>Resultados de búsqueda en toda la agenda</h2>
+    {% if resultados_busqueda %}
+      <table>
+        <thead><tr><th>Fecha y hora</th><th>Paciente</th><th>Tipo y motivo</th><th>Estado</th></tr></thead>
+        <tbody>
+        {% for cita in resultados_busqueda %}
+          <tr>
+            <td>{{ cita.fecha_hora|date:'d/m/Y H:i' }}</td>
+            <td><a href="{% url 'pacientes:detalle' cita.paciente_id %}">{{ cita.paciente.nombre_completo }}</a> <span class="paciente-secundario">{{ cita.paciente.rut }}</span></td>
+            <td>{{ cita.get_tipo_display }}{% if cita.motivo %}<div class="paciente-secundario">{{ cita.motivo|truncatechars:70 }}</div>{% endif %}</td>
+            <td><span class="estado estado-{{ cita.estado }}">{{ cita.get_estado_display }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="vacio">No se encontraron citas para “{{ busqueda }}” en la agenda de este profesional.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if profesional %}
+  <div class="tarjeta">
+    <h2>Próximas horas asignadas</h2>
+    <p class="subtitulo">Citas futuras de los próximos 30 días para {{ profesional.get_full_name|default:profesional.username }}.</p>
+    {% if proximas %}
+      <table>
+        <thead><tr><th>Fecha y hora</th><th>Paciente</th><th>Tipo y motivo</th><th>Estado</th></tr></thead>
+        <tbody>
+        {% for cita in proximas %}
+          <tr>
+            <td><strong>{{ cita.fecha_hora|date:'d/m/Y H:i' }}</strong></td>
+            <td><a href="{% url 'pacientes:detalle' cita.paciente_id %}">{{ cita.paciente.nombre_completo }}</a><div class="paciente-secundario">{{ cita.paciente.rut }} · {{ cita.paciente.edad_texto }}</div></td>
+            <td>{{ cita.get_tipo_display }}{% if cita.motivo %}<div class="paciente-secundario">{{ cita.motivo|truncatechars:70 }}</div>{% endif %}</td>
+            <td><span class="estado estado-{{ cita.estado }}">{{ cita.get_estado_display }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="vacio">No hay citas futuras en los próximos 30 días{% if busqueda %} que coincidan con la búsqueda{% endif %}.</p>
+    {% endif %}
+  </div>
 {% endif %}
 {% endblock %}

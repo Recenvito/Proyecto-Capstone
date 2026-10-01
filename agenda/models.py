@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -30,6 +31,7 @@ class Disponibilidad(models.Model):
     hora_fin = models.TimeField(verbose_name='Hasta')
     duracion_cita_minutos = models.PositiveSmallIntegerField(
         default=30, verbose_name='Duracion de cada hora (minutos)',
+        validators=[MinValueValidator(5), MaxValueValidator(240)],
     )
     lugar = models.CharField(
         max_length=150, blank=True, verbose_name='Lugar de atencion',
@@ -46,12 +48,14 @@ class Disponibilidad(models.Model):
         return f'{self.get_dia_semana_display()} {self.hora_inicio:%H:%M} a {self.hora_fin:%H:%M}'
 
     def clean(self):
+        if self.duracion_cita_minutos and self.duracion_cita_minutos % 5:
+            raise ValidationError({'duracion_cita_minutos': 'La duración debe avanzar en múltiplos de 5 minutos.'})
         if self.hora_inicio and self.hora_fin and self.hora_inicio >= self.hora_fin:
             raise ValidationError('La hora de inicio debe ser anterior a la hora de termino.')
 
     def generar_cupos(self, fecha):
         """Devuelve la lista de horas posibles (datetime) para una fecha dada."""
-        if not self.activo or fecha.weekday() != self.dia_semana:
+        if not self.activo or not self.duracion_cita_minutos or fecha.weekday() != self.dia_semana:
             return []
 
         tz = timezone.get_current_timezone()
@@ -111,7 +115,10 @@ class Cita(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='citas',
     )
     fecha_hora = models.DateTimeField(verbose_name='Fecha y hora')
-    duracion_minutos = models.PositiveSmallIntegerField(default=30)
+    duracion_minutos = models.PositiveSmallIntegerField(
+        default=30,
+        validators=[MinValueValidator(5), MaxValueValidator(240)],
+    )
     tipo = models.CharField(max_length=20, choices=Tipo.choices, default=Tipo.CONTROL)
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.AGENDADA)
     motivo = models.TextField(blank=True, verbose_name='Motivo de la consulta')
@@ -146,6 +153,8 @@ class Cita(models.Model):
 
     def clean(self):
         """Reglas de negocio: se validan antes de guardar."""
+        if self.duracion_minutos and self.duracion_minutos % 5:
+            raise ValidationError({'duracion_minutos': 'La duración debe avanzar en múltiplos de 5 minutos.'})
         if not self.fecha_hora or not self.profesional_id:
             return
 

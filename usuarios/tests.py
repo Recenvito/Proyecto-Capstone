@@ -12,6 +12,8 @@ import re
 from io import StringIO
 
 from django.core import mail
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase
 from django.test import override_settings
@@ -73,6 +75,52 @@ class ControlDeAccesoTest(TestCase):
         respuesta = self.client.get(
             reverse('pacientes:crear_atencion', args=[self.paciente.pk]))
         self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Disciplina o servicio')
+
+    def test_medico_asignado_registra_atencion_y_diagnostico_en_historial(self):
+        from pacientes.models import Atencion
+        from django.utils import timezone
+
+        self.client.force_login(self.medico)
+        fecha = timezone.localtime(timezone.now()).strftime('%Y-%m-%dT%H:%M')
+        respuesta = self.client.post(
+            reverse('pacientes:crear_atencion', args=[self.paciente.pk]),
+            {
+                'fecha': fecha,
+                'tipo_atencion': 'Neurología infantil',
+                'motivo_consulta': 'Control de seguimiento',
+                'anamnesis': 'Sin cambios relevantes',
+                'examen_fisico': '',
+                'impresion_diagnostica': 'Epilepsia focal en seguimiento',
+                'indicaciones': 'Mantener control',
+                'examenes_solicitados': '', 'derivaciones': '',
+                'proximo_control': '3 meses',
+                'peso_kg': '', 'talla_cm': '', 'perimetro_cefalico_cm': '',
+            },
+        )
+        self.assertEqual(respuesta.status_code, 302)
+        atencion = Atencion.objects.get(paciente=self.paciente)
+        self.assertEqual(atencion.profesional, self.medico)
+        self.assertEqual(atencion.tipo_atencion, 'Neurología infantil')
+        ficha = self.client.get(reverse('pacientes:detalle', args=[self.paciente.pk]))
+        self.assertContains(ficha, 'Control de seguimiento')
+        self.assertContains(ficha, 'Epilepsia focal en seguimiento')
+
+    def test_medico_asignado_agrega_diagnostico_y_lo_ve_en_ficha(self):
+        self.client.force_login(self.medico)
+        respuesta = self.client.post(
+            reverse('pacientes:crear_diagnostico', args=[self.paciente.pk]),
+            {
+                'descripcion': 'Trastorno del neurodesarrollo',
+                'codigo_cie10': 'F84.0',
+                'fecha_diagnostico': date.today().isoformat(),
+                'estado': Diagnostico.Estado.ACTIVO,
+                'notas': 'Seguimiento clínico',
+            },
+        )
+        self.assertEqual(respuesta.status_code, 302)
+        ficha = self.client.get(reverse('pacientes:detalle', args=[self.paciente.pk]))
+        self.assertContains(ficha, 'Trastorno del neurodesarrollo')
 
     def test_medico_asignado_puede_editar_antecedentes(self):
         self.client.force_login(self.medico)
@@ -181,6 +229,7 @@ class RecuperacionContrasenaTest(TestCase):
             'email': 'medico_nuevo@example.test',
             'rut': '12345678-5',
             'telefono': '+56 9 1234 5678',
+            'profesion': 'Psicóloga',
             'rol': Usuario.Rol.MEDICO,
         }, follow=True)
 
@@ -218,6 +267,36 @@ class RecuperacionContrasenaTest(TestCase):
         self.assertRedirects(respuesta, reverse('password_reset_complete'))
         self.usuario.refresh_from_db()
         self.assertTrue(self.usuario.check_password('Otra-Clave-segura-789'))
+
+
+class PoliticaContrasenasTest(TestCase):
+    def setUp(self):
+        self.usuario = Usuario.objects.create_user(
+            username='historial_claves',
+            email='historial@example.test',
+            password='Inicio-Seguro-000!',
+        )
+
+    def test_exige_complejidad_y_no_reutiliza_las_ultimas_cinco(self):
+        for debil in (
+            'corta',
+            'sin-mayuscula-123!',
+            'SinNumero-Clave!',
+            'SinCaracterEspecial123',
+        ):
+            with self.subTest(contrasena=debil), self.assertRaises(ValidationError):
+                validate_password(debil, self.usuario)
+
+        for indice in range(1, 6):
+            nueva = f'Fuerte-Clave-{indice:03d}!'
+            validate_password(nueva, self.usuario)
+            self.usuario.set_password(nueva)
+            self.usuario.save(update_fields=['password'])
+
+        with self.assertRaises(ValidationError):
+            validate_password('Fuerte-Clave-001!', self.usuario)
+        # La clave inicial es la sexta hacia atrás y queda fuera de la ventana.
+        validate_password('Inicio-Seguro-000!', self.usuario)
 
 
 class CargaPacientesDemoTest(TestCase):

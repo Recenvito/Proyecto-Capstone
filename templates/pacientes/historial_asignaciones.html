@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block titulo %}Historial de asignaciones{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div><h1>Historial de asignaciones profesionales</h1><p class="subtitulo">Asignaciones actuales y finalizadas.</p></div>
+</div>
+<div class="tarjeta">
+  {% if asignaciones %}
+    <table>
+      <thead><tr><th>Paciente</th><th>Profesional</th><th>Inicio</th><th>Término</th><th>Estado</th></tr></thead>
+      <tbody>
+      {% for asignacion in asignaciones %}
+        <tr>
+          <td><a href="{% url 'pacientes:detalle' asignacion.paciente_id %}">{{ asignacion.paciente.nombre_completo }}</a></td>
+          <td>{{ asignacion.profesional.get_full_name|default:asignacion.profesional.username }}</td>
+          <td>{{ asignacion.fecha_asignacion|date:'d/m/Y H:i' }}</td>
+          <td>{% if asignacion.fecha_termino %}{{ asignacion.fecha_termino|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
+          <td>{% if asignacion.activa %}Activa{% else %}Finalizada{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="vacio">Todavía no hay asignaciones.</p>
+  {% endif %}
+</div>
+{% endblock %}

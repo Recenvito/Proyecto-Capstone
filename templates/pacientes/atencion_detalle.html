@@ -5,6 +5,7 @@
 <div class="encabezado">
   <div>
     <h1>Atencion del {{ atencion.fecha|date:"d/m/Y" }}</h1>
+    <p><strong>Disciplina o servicio:</strong> {{ atencion.tipo_atencion|default:"No registrada" }}</p>
     <p class="subtitulo">
       <a href="{% url 'pacientes:detalle' atencion.paciente.pk %}">
         {{ atencion.paciente.nombre_completo }}</a>

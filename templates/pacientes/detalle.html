@@ -14,10 +14,25 @@
     {% if user.puede_ver_ficha_clinica %}
       <a href="{% url 'pacientes:crear_atencion' paciente.pk %}" class="boton boton-verde">
         + Registrar atencion</a>
+      <a href="{% url 'pacientes:crear_diagnostico' paciente.pk %}" class="boton boton-secundario">
+        + Agregar diagnóstico</a>
     {% endif %}
     <a href="/agenda/agendar/?paciente={{ paciente.pk }}" class="boton">+ Agendar hora</a>
-    <a href="{% url 'pacientes:editar' paciente.pk %}" class="boton boton-secundario">Editar</a>
+    {% if user.rol == 'ADMIN' or user.rol == 'SECRETARIA' %}<a href="{% url 'pacientes:editar' paciente.pk %}" class="boton boton-secundario">Editar</a>{% endif %}
   </div>
+</div>
+
+<div class="tarjeta">
+  <h3>Profesionales asignados</h3>
+  {% if asignaciones_profesionales %}
+    <ul>
+      {% for asignacion in asignaciones_profesionales %}
+        <li>{{ asignacion.profesional.get_full_name|default:asignacion.profesional.username }}{% if asignacion.profesional.profesion %} · {{ asignacion.profesional.profesion }}{% endif %}{% if asignacion.profesional.especialidad %} · {{ asignacion.profesional.especialidad }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="vacio">No hay profesionales asignados actualmente.</p>
+  {% endif %}
 </div>
 
 <div class="tarjeta">
@@ -132,31 +147,31 @@
   <div class="tarjeta">
     <h3>Diagnosticos</h3>
 
-    {% if atenciones %}
+    {% if diagnosticos %}
       <table>
         <thead>
           <tr>
-            <th>Impresion diagnostica</th>
+            <th>Diagnóstico</th>
+            <th>Código CIE-10</th>
             <th>Fecha</th>
+            <th>Estado</th>
             <th>Profesional</th>
           </tr>
         </thead>
         <tbody>
-          {% for a in atenciones %}
-            {% if a.impresion_diagnostica %}
-              <tr>
-                <td>{{ a.impresion_diagnostica|truncatechars:100 }}</td>
-                <td>{{ a.fecha|date:"d/m/Y" }}</td>
-                <td>
-                  {{ a.profesional.get_full_name|default:a.profesional.username }}
-                </td>
-              </tr>
-            {% endif %}
+          {% for diagnostico in diagnosticos %}
+            <tr>
+              <td>{{ diagnostico.descripcion }}</td>
+              <td>{{ diagnostico.codigo_cie10|default:"—" }}</td>
+              <td>{{ diagnostico.fecha_diagnostico|date:"d/m/Y" }}</td>
+              <td>{{ diagnostico.get_estado_display }}</td>
+              <td>{{ diagnostico.registrado_por.get_full_name|default:diagnostico.registrado_por.username|default:"—" }}</td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <p class="vacio">Sin diagnosticos registrados.</p>
+      <p class="vacio">Sin diagnósticos registrados. También puedes registrar la impresión diagnóstica al crear una atención.</p>
     {% endif %}
   </div>
 
@@ -167,6 +182,7 @@
         <thead>
           <tr>
             <th>Fecha</th>
+            <th>Servicio</th>
             <th>Motivo</th>
             <th>Impresion diagnostica</th>
             <th>Profesional</th>
@@ -177,9 +193,10 @@
           <tr>
             <td>
               <a href="{% url 'pacientes:detalle_atencion' a.pk %}">
-                <strong>{{ a.fecha|date:"d/m/Y" }}</strong>
+                <strong>{{ a.fecha|date:"d/m/Y H:i" }}</strong>
               </a>
             </td>
+            <td>{{ a.tipo_atencion|default:"—" }}</td>
             <td>{{ a.motivo_consulta|truncatechars:60 }}</td>
             <td>{{ a.impresion_diagnostica|truncatechars:60|default:"—" }}</td>
             <td>

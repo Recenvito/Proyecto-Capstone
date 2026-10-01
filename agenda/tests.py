@@ -7,12 +7,115 @@ from datetime import date, datetime, time, timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from pacientes.models import Paciente
 from usuarios.models import Usuario
 
+from .forms import CitaForm
 from .models import Bloqueo, Cita, Disponibilidad
+
+
+class VistasAgendaPorProfesionalTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.medico = Usuario.objects.create_user(
+            username='medico_agenda_vista', password='Clave-Prueba-2026!',
+            rol=Usuario.Rol.MEDICO,
+        )
+        cls.otro_medico = Usuario.objects.create_user(
+            username='otro_agenda_vista', password='Clave-Prueba-2026!',
+            rol=Usuario.Rol.MEDICO,
+        )
+        cls.paciente_asignado = Paciente.objects.create(
+            rut='12345678-5', nombres='Ana', apellido_paterno='Asignada',
+            fecha_nacimiento=date(2017, 5, 1), sexo='F',
+        )
+        cls.paciente_ajeno = Paciente.objects.create(
+            rut='98765432-0', nombres='Ana', apellido_paterno='Ajena',
+            fecha_nacimiento=date(2016, 2, 1), sexo='F',
+        )
+        from pacientes.models import AsignacionProfesional
+        AsignacionProfesional.objects.create(
+            paciente=cls.paciente_asignado, profesional=cls.medico,
+        )
+
+    def test_inicio_muestra_conteo_asignado_y_solo_citas_del_medico(self):
+        hoy = timezone.localdate()
+        cita_hoy = timezone.make_aware(
+            datetime.combine(hoy, time(12, 0)), timezone.get_current_timezone()
+        )
+        Cita.objects.create(
+            paciente=self.paciente_asignado, profesional=self.medico,
+            fecha_hora=cita_hoy, motivo='Control asignado',
+        )
+        Cita.objects.create(
+            paciente=self.paciente_ajeno, profesional=self.otro_medico,
+            fecha_hora=cita_hoy + timedelta(minutes=30), motivo='Privada',
+        )
+        self.client.force_login(self.medico)
+        respuesta = self.client.get(reverse('inicio'))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.context['total_pacientes'], 1)
+        self.assertEqual(list(respuesta.context['citas_hoy'].values_list('profesional_id', flat=True)), [self.medico.pk])
+
+    def test_agenda_muestra_citas_aunque_no_haya_horario_y_no_permite_cambiar_medico(self):
+        fecha = timezone.localdate() + timedelta(days=3)
+        hora = timezone.make_aware(
+            datetime.combine(fecha, time(11, 0)), timezone.get_current_timezone()
+        )
+        cita = Cita.objects.create(
+            paciente=self.paciente_asignado, profesional=self.medico,
+            fecha_hora=hora, motivo='Evaluación inicial',
+        )
+        Cita.objects.create(
+            paciente=self.paciente_ajeno, profesional=self.otro_medico,
+            fecha_hora=hora, motivo='No mostrar',
+        )
+        self.client.force_login(self.medico)
+        respuesta = self.client.get(reverse('agenda:calendario'), {
+            'fecha': fecha.isoformat(), 'profesional': self.otro_medico.pk,
+        })
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.context['profesional'], self.medico)
+        self.assertContains(respuesta, self.paciente_asignado.nombre_completo)
+        self.assertNotContains(respuesta, self.paciente_ajeno.nombre_completo)
+        self.assertEqual(respuesta.context['proximas'].get(pk=cita.pk), cita)
+
+    def test_busqueda_de_pacientes_filtra_por_asignacion_del_medico(self):
+        self.client.force_login(self.medico)
+        respuesta = self.client.get(reverse('pacientes:buscar'), {'q': 'Ana'})
+        self.assertEqual(respuesta.status_code, 200)
+        pacientes = respuesta.json()['pacientes']
+        self.assertEqual([item['id'] for item in pacientes], [self.paciente_asignado.pk])
+
+    def test_formulario_de_cita_limita_al_medico_a_pacientes_asignados(self):
+        form = CitaForm(user=self.medico)
+        self.assertEqual(
+            list(form.fields['paciente'].queryset), [self.paciente_asignado]
+        )
+        self.assertEqual(list(form.fields['profesional'].queryset), [self.medico])
+        self.assertTrue(form.fields['profesional'].disabled)
+
+    def test_busqueda_de_agenda_encuentra_citas_de_otras_fechas_solo_del_medico(self):
+        fecha = timezone.localdate() - timedelta(days=20)
+        hora = timezone.make_aware(
+            datetime.combine(fecha, time(10, 0)), timezone.get_current_timezone()
+        )
+        propia = Cita.objects.create(
+            paciente=self.paciente_asignado, profesional=self.medico,
+            fecha_hora=hora, motivo='Consulta de seguimiento',
+        )
+        Cita.objects.create(
+            paciente=self.paciente_ajeno, profesional=self.otro_medico,
+            fecha_hora=hora, motivo='Consulta de seguimiento',
+        )
+        self.client.force_login(self.medico)
+        respuesta = self.client.get(reverse('agenda:calendario'), {'q': 'seguimiento'})
+        self.assertContains(respuesta, self.paciente_asignado.nombre_completo)
+        self.assertNotContains(respuesta, self.paciente_ajeno.nombre_completo)
+        self.assertEqual(respuesta.context['resultados_busqueda'].get(pk=propia.pk), propia)
 
 
 class ReglasDeAgendaTest(TestCase):

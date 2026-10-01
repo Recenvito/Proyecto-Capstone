@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block titulo %}Agregar diagnóstico{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Agregar diagnóstico</h1>
+    <p class="subtitulo">{{ paciente.nombre_completo }} · {{ paciente.edad_texto }} · {{ paciente.rut }}</p>
+  </div>
+</div>
+<form method="post">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="mensaje error">{{ form.non_field_errors }}</div>{% endif %}
+  <fieldset>
+    <legend>Información diagnóstica</legend>
+    {% include '_campo.html' with campo=form.descripcion %}
+    {% include '_campo.html' with campo=form.codigo_cie10 %}
+    <div class="grid grid-2">
+      {% include '_campo.html' with campo=form.fecha_diagnostico %}
+      {% include '_campo.html' with campo=form.estado %}
+    </div>
+    {% include '_campo.html' with campo=form.notas %}
+  </fieldset>
+  <div class="acciones">
+    <button type="submit" class="boton boton-verde">Guardar diagnóstico</button>
+    <a href="{% url 'pacientes:detalle' paciente.pk %}" class="boton boton-secundario">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

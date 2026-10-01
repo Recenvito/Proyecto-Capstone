@@ -17,6 +17,7 @@
             <a href="{% url 'pacientes:lista' %}">Pacientes</a>
       {% if user.rol == 'ADMIN' %}
         <a href="{% url 'lista_auditoria' %}">Auditoría</a>
+        <a href="{% url 'pacientes:historial_asignaciones' %}">Asignaciones</a>
       {% endif %}
       {% if user.is_staff %}
         <a href="/admin/">Administración</a>
@@ -24,6 +25,7 @@
     </nav>
     <div class="usuario">
       <span>{{ user.get_full_name|default:user.username }} &middot; {{ user.get_rol_display }}</span>
+      <a href="{% url 'password_change' %}">Cambiar contraseña</a>
       <form method="post" action="{% url 'logout' %}" style="display:inline">
         {% csrf_token %}
         <button type="submit" class="boton boton-chico boton-secundario">Salir</button>

@@ -2,6 +2,7 @@ from datetime import date
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.urls import reverse
 
 
@@ -102,6 +103,7 @@ class AsignacionProfesional(models.Model):
         related_name='pacientes_asignados',
     )
     fecha_asignacion = models.DateTimeField(auto_now_add=True)
+    fecha_termino = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de termino')
     activa = models.BooleanField(default=True)
 
     class Meta:
@@ -117,6 +119,11 @@ class AsignacionProfesional(models.Model):
 
     def __str__(self):
         return f'{self.profesional} - {self.paciente.nombre_completo}'
+
+    def save(self, *args, **kwargs):
+        if not self.activa and self.fecha_termino is None:
+            self.fecha_termino = timezone.now()
+        super().save(*args, **kwargs)
 
 
 class Tutor(models.Model):
@@ -272,6 +279,12 @@ class Atencion(models.Model):
         related_name='atencion',
     )
     fecha = models.DateTimeField(verbose_name='Fecha de la atencion')
+    tipo_atencion = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Disciplina o servicio',
+        help_text='Ej: Neurologia, psicologia, fonoaudiologia.',
+    )
 
     motivo_consulta = models.TextField(verbose_name='Motivo de consulta')
     anamnesis = models.TextField(

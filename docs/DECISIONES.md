@@ -11,74 +11,28 @@ Sistema de agenda y ficha clinica para consulta de neurologia infantil.
 | Gestion de proyecto | Jira |
 | Editor / IDE | Visual Studio Code |
 | Framework | Django (Python) |
-| Base de datos | Oracle SQL |
+| Base de datos | MySQL 8.4 LTS |
 | Control de versiones | GitHub |
 | Prototipado de interfaz | Canva |
 
 ---
 
-## ⏳ DECISION PENDIENTE — Donde se aloja la base de datos Oracle
+## Historial — Por que se descarto Oracle SQL
 
-**Estado:** por confirmar con el equipo.
-**Responsable:** Rodrigo consulta con sus companieros de tesis.
+El stack inicial contemplaba **Oracle SQL**. Se descarto el 2026-09-22 por un motivo
+practico: **Oracle Database no se puede instalar en macOS** (Oracle no publica una
+version para Mac desde 2010, ni para Intel ni para Apple Silicon).
 
-### El problema
+Eso generaba una asimetria en el equipo: los integrantes con Windows podian instalar
+Oracle XE de forma nativa, pero el integrante con macOS quedaba obligado a levantarlo
+en un contenedor Docker o en la nube, es decir, trabajando distinto del resto.
 
-**Oracle Database no se puede instalar en macOS.** Oracle no publica una version para Mac
-desde 2010, ni para Intel ni para Apple Silicon. Esto no depende del equipo de Rodrigo:
-es una decision del fabricante.
+Se evaluaron tres salidas (Oracle local por integrante, Oracle Cloud compartido, o un
+servidor de la universidad) y finalmente el equipo opto por **cambiar de motor**. La
+decision y sus fundamentos estan mas abajo, en "Base de datos: MySQL 8.4 LTS".
 
-Esto genera una **asimetria en el equipo**:
-
-| Integrante | Sistema | Puede instalar Oracle localmente |
-|---|---|---|
-| Rodrigo | macOS (Apple Silicon M4 Pro) | ❌ No — requiere contenedor o nube |
-| Resto del equipo | Windows | ✅ Si — Oracle XE tiene instalador nativo |
-
-### Las opciones
-
-**A. Cada uno con su Oracle local**
-- Windows: instalador nativo de Oracle XE / Free 23ai.
-- macOS: contenedor Docker con la imagen ARM64 de Oracle Database Free 23ai.
-- ✅ Gratis, sin cuentas, funciona sin internet (util para la defensa de la tesis).
-- ❌ **Cada integrante trabaja sobre su propia base de datos.** Los datos de prueba no se
-  comparten y hay riesgo de desincronizar los esquemas entre companieros.
-
-**B. Una base Oracle compartida en la nube** *(Oracle Cloud — Autonomous Database "Always Free")*
-- ✅ **Todo el equipo trabaja contra la misma base de datos**, sin importar el sistema
-  operativo. Se elimina por completo el problema de Apple Silicon.
-- ✅ Es la configuracion mas parecida a un sistema en produccion real.
-- ❌ Requiere crear una cuenta en Oracle Cloud (pide tarjeta para verificar identidad; el
-  plan Always Free no cobra).
-- ❌ Depende de tener internet. **Riesgo:** si falla el wifi el dia de la defensa, no hay demo.
-
-**C. Servidor Oracle provisto por la universidad**
-- ✅ Compartido, sin costo, y suele estar bien visto en la evaluacion.
-- ❌ Hay que averiguar si existe y pedir credenciales con tiempo.
-
-### Recomendacion tecnica
-
-**Opcion B o C (base compartida), con la opcion A como respaldo local.**
-
-Al ser un trabajo en equipo, una base compartida evita el problema clasico de "en mi
-maquina funciona". Y conviene, en cualquier caso, dejar preparado un respaldo local
-(archivo `.sql` con el esquema y datos de prueba) para poder demostrar el sistema sin
-internet el dia de la defensa.
-
-### Mientras tanto: el desarrollo no esta bloqueado
-
-El proyecto quedo configurado para **conmutar de base de datos con una sola linea**, en el
-archivo `.env`:
-
-```
-DB_ENGINE=sqlite    # desarrollar sin Oracle levantado
-DB_ENGINE=oracle    # apuntar a la base Oracle real
-```
-
-Django usa el mismo codigo para ambas: los modelos, las consultas y las migraciones no
-cambian. Cuando el equipo confirme donde vive Oracle, solo se rellenan las credenciales.
-
----
+Todo rastro de Oracle se elimino del proyecto el 2026-10-08: el driver `oracledb` salio
+de `requirements.txt` y la configuracion correspondiente salio de `settings.py`.
 
 ## Decision tomada — Version de Python y Django
 
@@ -174,3 +128,58 @@ En Windows se usa el instalador oficial de MySQL 8.4 LTS (o XAMPP, que trae MySQ
 El codigo de la aplicacion es identico: modelos, vistas, formularios y consultas no se
 tocaron. Django traduce las consultas al motor configurado. Lo unico que cambia es el
 archivo `.env`.
+
+---
+
+## Tecnologias utilizadas y versiones
+
+Estado al 2026-10-08.
+
+### Lenguaje y framework
+
+| Tecnologia | Version | Rol en el proyecto |
+|---|---|---|
+| Python | 3.13.15 | Lenguaje de programacion del backend |
+| Django | 5.2.17 LTS | Framework web (soporte hasta abril de 2028) |
+| HTML5 / CSS3 | — | Interfaz de usuario. Son estandares web, no llevan version |
+
+### Base de datos
+
+| Tecnologia | Version | Rol en el proyecto |
+|---|---|---|
+| MySQL Server | 8.4.11 LTS | Motor de base de datos |
+| mysqlclient | 2.3.0 | Driver que conecta Python con MySQL |
+| SQLite | Incluida en Python | Respaldo para desarrollar sin MySQL encendido |
+
+### Librerias de Python
+
+| Libreria | Version | Para que se usa |
+|---|---|---|
+| python-dotenv | 1.2.3 | Lee las credenciales desde el archivo `.env` |
+| sqlparse | 0.6.0 | Procesamiento de SQL (requisito de Django) |
+| asgiref | 3.12.1 | Soporte asincrono (requisito de Django) |
+| cryptography | 50.0.1 | Cifrado de las conexiones |
+| cffi, pycparser, typing_extensions | — | Dependencias internas de las anteriores |
+
+### Herramientas de desarrollo
+
+| Herramienta | Version | Rol en el proyecto |
+|---|---|---|
+| Visual Studio Code | 1.137.0 | Editor de codigo |
+| MySQL Workbench | 26.7.0 | Cliente visual de base de datos y diagramas entidad-relacion |
+| Git | 2.50.1 | Control de versiones |
+| GitHub CLI (`gh`) | 2.98.0 | Interaccion con GitHub desde la terminal |
+| uv | 0.12.6 | Instalacion y gestion de versiones de Python |
+| Jira | — | Gestion del proyecto |
+| Canva | — | Prototipado de la interfaz |
+
+### Entorno de desarrollo
+
+El equipo trabaja en dos sistemas operativos distintos. Todas las tecnologias de la
+lista funcionan de forma nativa en ambos, por lo que el proyecto se ejecuta igual en
+cualquiera de las maquinas del equipo.
+
+| Integrante | Sistema operativo |
+|---|---|
+| Rodrigo Maira | macOS 26.6 sobre Apple Silicon (M4 Pro) |
+| Resto del equipo | Windows |

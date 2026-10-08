@@ -113,19 +113,6 @@ if _motor == 'mysql':
         }
     }
 
-elif _motor == 'oracle':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.oracle',
-            # NAME es el DSN: host:puerto/nombre_del_servicio
-            'NAME': os.environ.get('ORACLE_DSN', 'localhost:1521/FREEPDB1'),
-            'USER': os.environ.get('ORACLE_USER', ''),
-            'PASSWORD': os.environ.get('ORACLE_PASSWORD', ''),
-            'OPTIONS': {'threaded': True},
-            'TEST': {'USER': os.environ.get('ORACLE_TEST_USER', 'test_neuroficha')},
-        }
-    }
-
 else:
     # Base de datos local en un archivo, para trabajar sin levantar MySQL
     DATABASES = {

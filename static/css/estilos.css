@@ -97,6 +97,93 @@ a:hover {
   color: white;
 }
 
+.menu-configuracion {
+  position: relative;
+}
+
+.menu-configuracion > summary {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  font-size: 20px;
+  list-style: none;
+}
+
+.menu-configuracion > summary::-webkit-details-marker,
+.acciones-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-configuracion-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 270px;
+  padding: 8px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--blanco);
+  box-shadow: var(--sombra);
+}
+
+.menu-configuracion-panel > a,
+.acciones-menu-panel > a,
+.acciones-menu-panel button {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.barra .usuario .menu-configuracion-panel > a {
+  color: var(--texto);
+}
+
+.menu-configuracion-panel > a:hover,
+.acciones-menu-panel > a:hover,
+.acciones-menu-panel button:not(:disabled):hover {
+  background: var(--azul-claro);
+  color: var(--azul-oscuro);
+  text-decoration: none;
+}
+
+.acciones-menu-panel button:disabled {
+  color: #98a1aa;
+  cursor: not-allowed;
+}
+
+.contacto-soporte {
+  display: grid;
+  gap: 2px;
+  margin: 6px 4px 2px;
+  padding: 10px 6px 2px;
+  border-top: 1px solid var(--borde);
+  font-size: 12px;
+}
+
+.contacto-soporte span {
+  color: var(--texto-suave);
+}
+
+.contacto-soporte a {
+  color: var(--azul-oscuro) !important;
+  overflow-wrap: anywhere;
+}
+
 /* ===== Contenedor ===== */
 
 .contenedor {
@@ -1004,6 +1091,26 @@ legend {
   table-layout: fixed;
 }
 
+.tabla-asignaciones,
+.tabla-medicos {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.tabla-medicos {
+  width: 100%;
+}
+
+.tabla-asignaciones th,
+.tabla-medicos th {
+  width: auto;
+}
+
+.tabla-accion .form-estado-paciente {
+  display: inline-block;
+  margin-left: 6px;
+}
+
 .tabla-pacientes th {
   padding: 13px 14px;
   background: #f8fafc;
@@ -1047,6 +1154,57 @@ legend {
 
 .tabla-pacientes th:nth-child(6) {
   width: 11%;
+}
+
+.tabla-pacientes.tabla-asignaciones th:nth-child(n),
+.tabla-pacientes.tabla-medicos th:nth-child(n) {
+  width: auto;
+}
+
+.tabla-pacientes.tabla-asignaciones th:nth-child(1) { min-width: 210px; }
+.tabla-pacientes.tabla-asignaciones th:nth-child(2) { min-width: 170px; }
+.tabla-pacientes.tabla-asignaciones th:nth-child(3),
+.tabla-pacientes.tabla-asignaciones th:nth-child(4) { min-width: 125px; }
+.tabla-pacientes.tabla-asignaciones th:nth-child(5) { min-width: 110px; }
+.tabla-pacientes.tabla-asignaciones th:nth-child(6) { min-width: 130px; }
+
+.tabla-pacientes.tabla-medicos th:nth-child(1) { width: 18%; }
+.tabla-pacientes.tabla-medicos th:nth-child(2) { width: 13%; }
+.tabla-pacientes.tabla-medicos th:nth-child(3) { width: 17%; }
+.tabla-pacientes.tabla-medicos th:nth-child(4),
+.tabla-pacientes.tabla-medicos th:nth-child(5) { width: 10%; }
+.tabla-pacientes.tabla-medicos th:nth-child(6) { width: 10%; }
+.tabla-pacientes.tabla-medicos th:nth-child(7) { width: 22%; }
+
+.tabla-medicos td {
+  overflow-wrap: anywhere;
+}
+
+.acciones-menu > summary {
+  width: 100%;
+  padding: 6px 8px;
+  cursor: pointer;
+  list-style: none;
+  text-align: center;
+}
+
+.acciones-menu-panel {
+  position: static;
+  min-width: 0;
+  margin-top: 6px;
+  padding: 5px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--blanco);
+}
+
+.acciones-menu-panel form {
+  margin: 0;
+}
+
+.formulario-perfil {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .tabla-pacientes td {
@@ -1262,6 +1420,70 @@ legend {
 
   .tabla-pacientes {
     min-width: 850px;
+  }
+
+  .tabla-medicos-responsive {
+    overflow: visible;
+  }
+
+  .tabla-pacientes.tabla-medicos {
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  .tabla-medicos thead {
+    display: none;
+  }
+
+  .tabla-medicos tbody,
+  .tabla-medicos tbody tr {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla-medicos tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 14px;
+    padding: 8px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--blanco);
+  }
+
+  .tabla-pacientes.tabla-medicos td {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .tabla-medicos td::before {
+    content: attr(data-label);
+    color: var(--texto-suave);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .tabla-medicos td[data-label="Acción"] {
+    grid-column: 1 / -1;
+  }
+
+  .acciones-menu-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .acciones-menu-panel > a,
+  .acciones-menu-panel button {
+    padding: 8px 5px;
+    text-align: center;
   }
 
 }

@@ -39,6 +39,9 @@ class ControlDeAccesoTest(TestCase):
         cls.secretaria = Usuario.objects.create_user(
             username='secretaria_test', password='clave-de-prueba',
             rol=Usuario.Rol.SECRETARIA)
+        cls.admin = Usuario.objects.create_user(
+            username='admin_test', password='clave-de-prueba',
+            rol=Usuario.Rol.ADMIN)
         cls.otro_medico = Usuario.objects.create_user(
             username='otro_medico_test', password='clave-de-prueba',
             rol=Usuario.Rol.MEDICO, first_name='Otro', last_name='Medico')
@@ -136,6 +139,13 @@ class ControlDeAccesoTest(TestCase):
         respuesta = self.client.get(reverse('pacientes:detalle', args=[self.paciente.pk]))
         self.assertEqual(respuesta.status_code, 403)
 
+    def test_medico_no_accede_a_paciente_inactivo_aunque_conserve_asignacion(self):
+        self.paciente.activo = False
+        self.paciente.save(update_fields=['activo'])
+        self.client.force_login(self.medico)
+        respuesta = self.client.get(reverse('pacientes:detalle', args=[self.paciente.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+
     def test_medico_no_asignado_no_puede_registrar_atenciones(self):
         self.client.force_login(self.otro_medico)
         respuesta = self.client.get(
@@ -149,6 +159,228 @@ class ControlDeAccesoTest(TestCase):
         self.client.force_login(self.medico)
         respuesta = self.client.get(reverse('pacientes:detalle', args=[self.paciente.pk]))
         self.assertEqual(respuesta.status_code, 403)
+
+    def test_admin_puede_desactivar_y_reactivar_asignacion(self):
+        asignacion = AsignacionProfesional.objects.get(
+            paciente=self.paciente, profesional=self.medico)
+        self.client.force_login(self.admin)
+
+        respuesta = self.client.post(
+            reverse('pacientes:cambiar_estado_asignacion', args=[asignacion.pk]),
+            {'vista': 'asignaciones', 'q': 'Paciente'},
+        )
+        self.assertRedirects(
+            respuesta,
+            reverse('pacientes:historial_asignaciones') + '?vista=asignaciones&q=Paciente',
+        )
+        asignacion.refresh_from_db()
+        self.assertFalse(asignacion.activa)
+        self.assertIsNotNone(asignacion.fecha_termino)
+
+        fecha_desactivacion = asignacion.fecha_termino
+        self.client.post(
+            reverse('pacientes:cambiar_estado_asignacion', args=[asignacion.pk]),
+            {'vista': 'asignaciones'},
+        )
+        asignacion.refresh_from_db()
+        self.assertTrue(asignacion.activa)
+        self.assertIsNone(asignacion.fecha_termino)
+
+        self.client.post(
+            reverse('pacientes:cambiar_estado_asignacion', args=[asignacion.pk]),
+            {'vista': 'asignaciones'},
+        )
+        asignacion.refresh_from_db()
+        self.assertFalse(asignacion.activa)
+        self.assertGreaterEqual(asignacion.fecha_termino, fecha_desactivacion)
+
+    def test_rol_no_administrativo_no_puede_cambiar_estado_asignacion(self):
+        asignacion = AsignacionProfesional.objects.get(
+            paciente=self.paciente, profesional=self.medico)
+        self.client.force_login(self.secretaria)
+        respuesta = self.client.post(
+            reverse('pacientes:cambiar_estado_asignacion', args=[asignacion.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        asignacion.refresh_from_db()
+        self.assertTrue(asignacion.activa)
+
+    def test_admin_puede_buscar_medicos_en_la_seccion_correspondiente(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(
+            reverse('pacientes:historial_asignaciones'),
+            {'vista': 'medicos', 'q': 'Doctora'},
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Doctora Prueba')
+        self.assertNotContains(respuesta, 'Otro Medico')
+        self.assertContains(respuesta, 'Inicio')
+        self.assertContains(respuesta, 'Término')
+        self.assertContains(respuesta, 'Estado')
+        self.assertContains(respuesta, 'Acción')
+
+    def test_admin_desactiva_medico_y_finaliza_asignaciones(self):
+        asignacion = AsignacionProfesional.objects.get(
+            paciente=self.paciente, profesional=self.medico)
+        self.client.force_login(self.admin)
+
+        respuesta = self.client.post(
+            reverse('pacientes:cambiar_estado_medico', args=[self.medico.pk]),
+            {'q': 'Doctora', 'page': '1'},
+        )
+        self.assertRedirects(
+            respuesta,
+            reverse('pacientes:historial_asignaciones')
+            + '?vista=medicos&q=Doctora&page=1',
+        )
+        self.medico.refresh_from_db()
+        asignacion.refresh_from_db()
+        self.assertFalse(self.medico.is_active)
+        self.assertIsNotNone(self.medico.fecha_termino)
+        self.assertFalse(asignacion.activa)
+        self.assertEqual(asignacion.fecha_termino, self.medico.fecha_termino)
+
+        self.client.post(
+            reverse('pacientes:cambiar_estado_medico', args=[self.medico.pk]),
+            {'page': '1'},
+        )
+        self.medico.refresh_from_db()
+        asignacion.refresh_from_db()
+        self.assertTrue(self.medico.is_active)
+        self.assertIsNone(self.medico.fecha_termino)
+        self.assertFalse(asignacion.activa)
+
+    def test_no_administrador_no_puede_cambiar_estado_de_medico(self):
+        self.client.force_login(self.secretaria)
+        respuesta = self.client.post(
+            reverse('pacientes:cambiar_estado_medico', args=[self.medico.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        self.medico.refresh_from_db()
+        self.assertTrue(self.medico.is_active)
+
+    def test_admin_edita_datos_del_usuario_sin_poder_cambiar_username(self):
+        self.client.force_login(self.admin)
+        url = reverse('editar_usuario', args=[self.medico.pk])
+        respuesta = self.client.post(
+            url + '?q=Doctora&page=2',
+            {
+                'username': 'username_modificado',
+                'first_name': 'Doctora',
+                'last_name': 'Actualizada',
+                'email': 'doctora.actualizada@example.test',
+                'rut': '',
+                'telefono': '+56 9 1234 5678',
+                'profesion': 'Medicina',
+                'especialidad': 'Neurología',
+                'registro_superintendencia': '123456',
+                'rol': Usuario.Rol.MEDICO,
+            },
+        )
+        self.assertRedirects(
+            respuesta,
+            reverse('pacientes:historial_asignaciones')
+            + '?vista=medicos&q=Doctora&page=2',
+        )
+        self.medico.refresh_from_db()
+        self.assertEqual(self.medico.username, 'medico_test')
+        self.assertEqual(self.medico.last_name, 'Actualizada')
+        self.assertEqual(self.medico.especialidad, 'Neurología')
+
+    def test_usuario_no_administrador_no_puede_editar_otra_cuenta(self):
+        self.client.force_login(self.secretaria)
+        respuesta = self.client.get(reverse('editar_usuario', args=[self.medico.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_perfil_no_permite_cambiar_username_ni_rol(self):
+        self.client.force_login(self.medico)
+        respuesta = self.client.post(
+            reverse('editar_perfil'),
+            {
+                'username': 'username_modificado',
+                'rol': Usuario.Rol.ADMIN,
+                'first_name': 'Doctora',
+                'last_name': 'Perfil',
+                'email': 'doctora.perfil@example.test',
+                'rut': '',
+                'telefono': '',
+                'profesion': 'Medicina',
+                'especialidad': 'Neurología',
+                'registro_superintendencia': '',
+            },
+        )
+        self.assertRedirects(respuesta, reverse('editar_perfil'))
+        self.medico.refresh_from_db()
+        self.assertEqual(self.medico.username, 'medico_test')
+        self.assertEqual(self.medico.rol, Usuario.Rol.MEDICO)
+        self.assertEqual(self.medico.last_name, 'Perfil')
+
+    def test_desactivar_paciente_finaliza_asignaciones_y_reactivar_no_las_reabre(self):
+        asignacion = AsignacionProfesional.objects.get(
+            paciente=self.paciente, profesional=self.medico)
+        self.client.force_login(self.admin)
+
+        respuesta = self.client.post(
+            reverse('pacientes:cambiar_estado_paciente', args=[self.paciente.pk]),
+            {'q': 'Paciente', 'page': '1'},
+        )
+        self.assertRedirects(respuesta, reverse('pacientes:lista') + '?q=Paciente&page=1')
+        self.paciente.refresh_from_db()
+        asignacion.refresh_from_db()
+        self.assertFalse(self.paciente.activo)
+        self.assertFalse(asignacion.activa)
+        self.assertIsNotNone(asignacion.fecha_termino)
+
+        self.client.post(
+            reverse('pacientes:cambiar_estado_asignacion', args=[asignacion.pk]),
+            {'vista': 'asignaciones'},
+        )
+        asignacion.refresh_from_db()
+        self.assertFalse(asignacion.activa)
+
+        respuesta = self.client.get(reverse('pacientes:lista'))
+        self.assertContains(respuesta, 'Inactivo')
+        self.assertContains(respuesta, 'Activar')
+
+        self.client.post(
+            reverse('pacientes:cambiar_estado_paciente', args=[self.paciente.pk]))
+        self.paciente.refresh_from_db()
+        asignacion.refresh_from_db()
+        self.assertTrue(self.paciente.activo)
+        self.assertFalse(asignacion.activa)
+
+    def test_rol_no_administrativo_no_puede_activar_o_desactivar_paciente(self):
+        self.client.force_login(self.secretaria)
+        respuesta = self.client.post(
+            reverse('pacientes:cambiar_estado_paciente', args=[self.paciente.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        self.paciente.refresh_from_db()
+        self.assertTrue(self.paciente.activo)
+
+    def test_listados_de_asignaciones_y_medicos_se_paginan_de_a_quince(self):
+        for numero in range(15):
+            medico = Usuario.objects.create_user(
+                username=f'medico_paginado_{numero:02}',
+                password='clave-de-prueba',
+                rol=Usuario.Rol.MEDICO,
+                first_name='Medico',
+                last_name=f'Paginado {numero:02}',
+            )
+            AsignacionProfesional.objects.create(
+                paciente=self.paciente, profesional=medico,
+            )
+
+        self.client.force_login(self.admin)
+        asignaciones = self.client.get(
+            reverse('pacientes:historial_asignaciones'),
+            {'vista': 'asignaciones'},
+        )
+        medicos = self.client.get(
+            reverse('pacientes:historial_asignaciones'),
+            {'vista': 'medicos'},
+        )
+        self.assertEqual(asignaciones.context['asignaciones'].paginator.per_page, 15)
+        self.assertEqual(asignaciones.context['asignaciones'].paginator.num_pages, 2)
+        self.assertEqual(medicos.context['medicos'].paginator.per_page, 15)
+        self.assertEqual(medicos.context['medicos'].paginator.num_pages, 2)
 
     # --- Rol secretaria ---
 

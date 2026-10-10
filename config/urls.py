@@ -47,6 +47,8 @@ urlpatterns = [
     ),
     name='password_change_done',
   ),
+  path('perfil/', usuarios_views.editar_perfil, name='editar_perfil'),
+  path('usuarios/<int:pk>/editar/', usuarios_views.editar_usuario, name='editar_usuario'),
 
   # Recuperacion de contraseña
   path(

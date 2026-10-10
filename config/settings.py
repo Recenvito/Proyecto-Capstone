@@ -30,6 +30,8 @@ load_dotenv(BASE_DIR / '.env', override=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'inseguro-solo-para-desarrollo')
+SOPORTE_EMAIL = os.environ.get('SOPORTE_EMAIL', 'soporte@neuroficha.example')
+SOPORTE_TELEFONO = os.environ.get('SOPORTE_TELEFONO', '+56 9 0000 0000')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
@@ -79,6 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'config.context_processors.soporte_contacto',
             ],
         },
     },

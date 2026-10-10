@@ -2,11 +2,16 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.contrib import messages
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from urllib.parse import urlencode
 from .models import Auditoria, Usuario
 from agenda.models import Cita
-from pacientes.models import Paciente
+from pacientes.models import AsignacionProfesional, Paciente
+from .forms import PerfilUsuarioForm, UsuarioEdicionAdminForm
 
 
 class LoginAuditoriaView(auth_views.LoginView):
@@ -178,3 +183,54 @@ def lista_auditoria(request):
         'usuarios/auditoria.html',
         contexto,
     )
+
+
+@login_required
+def editar_perfil(request):
+    if request.method == 'POST':
+        form = PerfilUsuarioForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tu perfil fue actualizado.')
+            return redirect('editar_perfil')
+    else:
+        form = PerfilUsuarioForm(instance=request.user)
+    return render(request, 'usuarios/perfil_formulario.html', {
+        'form': form,
+        'usuario': request.user,
+        'es_edicion_admin': False,
+    })
+
+
+@login_required
+def editar_usuario(request, pk):
+    if request.user.rol != Usuario.Rol.ADMIN:
+        return render(request, '403.html', status=403)
+
+    usuario = get_object_or_404(Usuario, pk=pk)
+    if request.method == 'POST':
+        form = UsuarioEdicionAdminForm(request.POST, instance=usuario)
+        if form.is_valid():
+            with transaction.atomic():
+                usuario = form.save()
+                if usuario.rol != Usuario.Rol.MEDICO:
+                    fecha_termino = timezone.now()
+                    AsignacionProfesional.objects.filter(
+                        profesional=usuario,
+                        activa=True,
+                    ).update(activa=False, fecha_termino=fecha_termino)
+            messages.success(request, 'Los datos del usuario fueron actualizados.')
+            url = reverse('pacientes:historial_asignaciones')
+            filtros = urlencode({
+                'vista': 'medicos',
+                'q': request.GET.get('q', ''),
+                'page': request.GET.get('page', '1'),
+            })
+            return redirect(f'{url}?{filtros}')
+    else:
+        form = UsuarioEdicionAdminForm(instance=usuario)
+    return render(request, 'usuarios/perfil_formulario.html', {
+        'form': form,
+        'usuario': usuario,
+        'es_edicion_admin': True,
+    })

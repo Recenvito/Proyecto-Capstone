@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.urls import reverse
+from urllib.parse import urlencode
 from usuarios.permisos import (
   puede_acceder_ficha,
   puede_gestionar_paciente,
@@ -14,7 +16,7 @@ from usuarios.permisos import (
 )
 from .forms import AntecedentesForm, AtencionForm, DiagnosticoForm, PacienteForm, TutorFormSet
 from .models import AntecedentesNeurologicos, AsignacionProfesional, Atencion, Diagnostico, Paciente
-from usuarios.models import Auditoria
+from usuarios.models import Auditoria, Usuario
 
 
 @login_required
@@ -22,7 +24,9 @@ def lista(request):
   """Listado de pacientes segun el acceso del usuario."""
   busqueda = request.GET.get('q', '').strip()
 
-  pacientes = Paciente.objects.filter(activo=True)
+  pacientes = Paciente.objects.all()
+  if request.user.rol != 'ADMIN':
+    pacientes = pacientes.filter(activo=True)
 
   if request.user.es_medico:
     pacientes = pacientes.filter(
@@ -48,7 +52,39 @@ def lista(request):
     'pacientes': pacientes_pagina,
     'busqueda': busqueda,
     'total': pacientes.count(),
+    'es_admin': request.user.rol == 'ADMIN',
   })
+
+
+@login_required
+def cambiar_estado_paciente(request, pk):
+  if request.user.rol != 'ADMIN':
+    return render(request, '403.html', status=403)
+  if request.method != 'POST':
+    return redirect('pacientes:lista')
+
+  with transaction.atomic():
+    paciente = get_object_or_404(Paciente.objects.select_for_update(), pk=pk)
+    paciente.activo = not paciente.activo
+    paciente.save(update_fields=['activo', 'actualizado_en'])
+
+    if not paciente.activo:
+      fecha_termino = timezone.now()
+      AsignacionProfesional.objects.filter(
+        paciente=paciente,
+        activa=True,
+      ).update(activa=False, fecha_termino=fecha_termino)
+
+  if paciente.activo:
+    messages.success(request, 'Paciente activado. Debe asignarse nuevamente a los profesionales.')
+  else:
+    messages.success(request, 'Paciente desactivado y asignaciones activas finalizadas.')
+  url = reverse('pacientes:lista')
+  filtros = urlencode({
+    'q': request.POST.get('q', ''),
+    'page': request.POST.get('page', '1'),
+  })
+  return redirect(f'{url}?{filtros}')
 
 @login_required
 def detalle(request, pk):
@@ -377,9 +413,9 @@ def buscar(request):
   """Busqueda de pacientes segun el acceso del usuario."""
   busqueda = request.GET.get('q', '').strip()
 
-  pacientes = Paciente.objects.filter(
-    activo=True
-  )
+  pacientes = Paciente.objects.all()
+  if request.user.rol != 'ADMIN':
+    pacientes = pacientes.filter(activo=True)
 
   if request.user.es_medico:
     pacientes = pacientes.filter(
@@ -402,13 +438,20 @@ def buscar(request):
   resultados = []
 
   for paciente in pacientes:
-    resultados.append({
+    resultado = {
       'id': paciente.pk,
       'nombre': paciente.nombre_completo,
       'rut': paciente.rut,
       'edad': paciente.edad_texto,
       'prevision': paciente.get_prevision_display(),
-    })
+      'activo': paciente.activo,
+      'url_detalle': reverse('pacientes:detalle', args=[paciente.pk]),
+    }
+    if request.user.rol == 'ADMIN':
+      resultado['url_estado'] = reverse(
+        'pacientes:cambiar_estado_paciente', args=[paciente.pk]
+      )
+    resultados.append(resultado)
 
   return JsonResponse({
     'pacientes': resultados,
@@ -419,12 +462,117 @@ def buscar(request):
 def historial_asignaciones(request):
   if request.user.rol != 'ADMIN':
     return render(request, '403.html', status=403)
+
+  vista = request.GET.get('vista', 'medicos')
+  if vista not in ('asignaciones', 'medicos'):
+    vista = 'medicos'
+  busqueda = request.GET.get('q', '').strip()
+
   asignaciones = AsignacionProfesional.objects.select_related(
     'paciente', 'profesional'
-  ).order_by('-fecha_asignacion')
+  )
+  medicos = Usuario.objects.filter(rol=Usuario.Rol.MEDICO)
+
+  if busqueda and vista == 'asignaciones':
+    asignaciones = asignaciones.filter(
+      Q(paciente__nombres__icontains=busqueda)
+      | Q(paciente__apellido_paterno__icontains=busqueda)
+      | Q(paciente__apellido_materno__icontains=busqueda)
+      | Q(paciente__rut__icontains=busqueda)
+      | Q(profesional__first_name__icontains=busqueda)
+      | Q(profesional__last_name__icontains=busqueda)
+      | Q(profesional__username__icontains=busqueda)
+    )
+  if busqueda and vista == 'medicos':
+    medicos = medicos.filter(
+      Q(first_name__icontains=busqueda)
+      | Q(last_name__icontains=busqueda)
+      | Q(username__icontains=busqueda)
+      | Q(profesion__icontains=busqueda)
+      | Q(especialidad__icontains=busqueda)
+    )
+
+  asignaciones = asignaciones.order_by('-fecha_asignacion')
+  medicos = medicos.order_by('first_name', 'last_name', 'username')
+  paginador_asignaciones = Paginator(asignaciones, 15)
+  paginador_medicos = Paginator(medicos, 15)
+  pagina = request.GET.get('page')
   return render(request, 'pacientes/historial_asignaciones.html', {
-    'asignaciones': asignaciones,
+    'asignaciones': paginador_asignaciones.get_page(pagina),
+    'medicos': paginador_medicos.get_page(pagina),
+    'vista': vista,
+    'busqueda': busqueda,
   })
+
+
+@login_required
+def cambiar_estado_medico(request, pk):
+  if request.user.rol != 'ADMIN':
+    return render(request, '403.html', status=403)
+  if request.method != 'POST':
+    return redirect('pacientes:historial_asignaciones')
+
+  with transaction.atomic():
+    medico = get_object_or_404(
+      Usuario.objects.select_for_update().filter(rol=Usuario.Rol.MEDICO),
+      pk=pk,
+    )
+    medico.is_active = not medico.is_active
+    if medico.is_active:
+      medico.fecha_termino = None
+    else:
+      medico.fecha_termino = timezone.now()
+      AsignacionProfesional.objects.filter(
+        profesional=medico,
+        activa=True,
+      ).update(activa=False, fecha_termino=medico.fecha_termino)
+    medico.save(update_fields=['is_active', 'fecha_termino'])
+
+  if medico.is_active:
+    messages.success(request, 'Cuenta médica activada. Debe asignarse nuevamente a los pacientes.')
+  else:
+    messages.success(request, 'Cuenta médica desactivada y asignaciones activas finalizadas.')
+  url = reverse('pacientes:historial_asignaciones')
+  filtros = urlencode({
+    'vista': 'medicos',
+    'q': request.POST.get('q', ''),
+    'page': request.POST.get('page', '1'),
+  })
+  return redirect(f'{url}?{filtros}')
+
+
+@login_required
+def cambiar_estado_asignacion(request, pk):
+  if request.user.rol != 'ADMIN':
+    return render(request, '403.html', status=403)
+  if request.method != 'POST':
+    return redirect('pacientes:historial_asignaciones')
+
+  asignacion = get_object_or_404(AsignacionProfesional, pk=pk)
+  if not asignacion.activa and not asignacion.paciente.activo:
+    messages.error(request, 'No se puede activar una asignación de un paciente desactivado.')
+    url = reverse('pacientes:historial_asignaciones')
+    filtros = urlencode({
+      'vista': request.POST.get('vista', 'asignaciones'),
+      'q': request.POST.get('q', ''),
+      'page': request.POST.get('page', '1'),
+    })
+    return redirect(f'{url}?{filtros}')
+  asignacion.activa = not asignacion.activa
+  asignacion.fecha_termino = None if asignacion.activa else timezone.now()
+  asignacion.save(update_fields=['activa', 'fecha_termino'])
+
+  estado = 'activada' if asignacion.activa else 'desactivada'
+  messages.success(request, f'Asignación {estado}.')
+  url = reverse('pacientes:historial_asignaciones')
+  datos_filtro = {
+    'vista': request.POST.get('vista', 'asignaciones'),
+    'q': request.POST.get('q', ''),
+  }
+  if request.POST.get('page'):
+    datos_filtro['page'] = request.POST['page']
+  filtros = urlencode(datos_filtro)
+  return redirect(f'{url}?{filtros}')
 
 
 @login_required

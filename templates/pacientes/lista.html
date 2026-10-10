@@ -8,7 +8,7 @@
     <h1>Pacientes</h1>
     <p class="subtitulo">
       {{ total }} paciente{{ total|pluralize }}
-      activo{{ total|pluralize }}
+      {% if es_admin %}registrado{{ total|pluralize }}{% else %}activo{{ total|pluralize }}{% endif %}
     </p>
   </div>
 
@@ -146,6 +146,16 @@
                 >
                   Ver ficha
                 </a>
+                {% if es_admin %}
+                  <form method="post" action="{% url 'pacientes:cambiar_estado_paciente' p.pk %}" class="form-estado-paciente">
+                    {% csrf_token %}
+                    <input type="hidden" name="q" value="{{ busqueda }}">
+                    <input type="hidden" name="page" value="{{ pacientes.number }}">
+                    <button type="submit" class="boton boton-pequeno{% if p.activo %} boton-secundario{% endif %}">
+                      {% if p.activo %}Desactivar{% else %}Activar{% endif %}
+                    </button>
+                  </form>
+                {% endif %}
 
               </td>
 
@@ -237,12 +247,17 @@
 
   {% endif %}
 
+  {% if es_admin %}<form id="csrf-paciente" hidden>{% csrf_token %}</form>{% endif %}
+
 </div>
 <script>
   const busqueda = document.getElementById('busqueda-pacientes');
   const tabla = document.querySelector('.tabla-pacientes tbody');
   const tablaCompleta = tabla ? tabla.closest('table') : null;
   const sinPacientes = document.querySelector('.tarjeta .vacio');
+  const esAdmin = {% if es_admin %}true{% else %}false{% endif %};
+  const csrfToken = document.querySelector('#csrf-paciente input[name="csrfmiddlewaretoken"]')?.value ||
+    document.querySelector('form[action*="/estado/"] input[name="csrfmiddlewaretoken"]')?.value || '';
 
   if (!busqueda || !tabla) {
     console.error('No se pudo inicializar la búsqueda de pacientes.');
@@ -283,7 +298,7 @@
           const fila = document.createElement('tr');
           const identidad = document.createElement('td');
           const enlace = document.createElement('a');
-          enlace.href = '/pacientes/' + encodeURIComponent(paciente.id) + '/';
+          enlace.href = paciente.url_detalle;
           enlace.className = 'paciente-nombre';
           const nombre = document.createElement('strong');
           nombre.textContent = paciente.nombre;
@@ -298,8 +313,8 @@
           const tutor = document.createElement('td'); tutor.textContent = '—';
           const estado = document.createElement('td');
           const etiquetaEstado = document.createElement('span');
-          etiquetaEstado.className = 'estado estado-activo';
-          etiquetaEstado.textContent = 'Activo';
+          etiquetaEstado.className = paciente.activo ? 'estado estado-activo' : 'estado estado-inactivo';
+          etiquetaEstado.textContent = paciente.activo ? 'Activo' : 'Inactivo';
           estado.appendChild(etiquetaEstado);
           const accion = document.createElement('td'); accion.className = 'tabla-accion';
           const ver = document.createElement('a');
@@ -307,6 +322,25 @@
           ver.className = 'boton boton-secundario boton-pequeno';
           ver.textContent = 'Ver ficha';
           accion.appendChild(ver);
+          if (esAdmin && paciente.url_estado) {
+            const formulario = document.createElement('form');
+            formulario.method = 'post';
+            formulario.action = paciente.url_estado;
+            formulario.className = 'form-estado-paciente';
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = csrfToken;
+            const query = document.createElement('input');
+            query.type = 'hidden'; query.name = 'q'; query.value = busqueda.value;
+            const pagina = document.createElement('input');
+            pagina.type = 'hidden'; pagina.name = 'page';
+            pagina.value = new URLSearchParams(window.location.search).get('page') || '1';
+            const cambiarEstado = document.createElement('button');
+            cambiarEstado.type = 'submit';
+            cambiarEstado.className = 'boton boton-pequeno' + (paciente.activo ? ' boton-secundario' : '');
+            cambiarEstado.textContent = paciente.activo ? 'Desactivar' : 'Activar';
+            formulario.append(csrf, query, pagina, cambiarEstado);
+            accion.appendChild(formulario);
+          }
           fila.append(identidad, edad, prevision, tutor, estado, accion);
           tabla.appendChild(fila);
         });

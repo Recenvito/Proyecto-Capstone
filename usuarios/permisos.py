@@ -13,6 +13,8 @@ def puede_acceder_ficha(usuario, paciente):
     return True
   if not usuario.es_medico:
     return False
+  if not paciente.activo:
+    return False
   return paciente.asignaciones_profesionales.filter(
     profesional=usuario,
     activa=True,

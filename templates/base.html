@@ -17,7 +17,7 @@
             <a href="{% url 'pacientes:lista' %}">Pacientes</a>
       {% if user.rol == 'ADMIN' %}
         <a href="{% url 'lista_auditoria' %}">Auditoría</a>
-        <a href="{% url 'pacientes:historial_asignaciones' %}">Asignaciones</a>
+        <a href="{% url 'pacientes:historial_asignaciones' %}">Usuarios</a>
       {% endif %}
       {% if user.is_staff %}
         <a href="/admin/">Administración</a>
@@ -25,7 +25,20 @@
     </nav>
     <div class="usuario">
       <span>{{ user.get_full_name|default:user.username }} &middot; {{ user.get_rol_display }}</span>
-      <a href="{% url 'password_change' %}">Cambiar contraseña</a>
+      <details class="menu-configuracion">
+        <summary aria-label="Abrir configuración" title="Configuración">⚙</summary>
+        <div class="menu-configuracion-panel">
+          <a href="{% url 'editar_perfil' %}">Mi perfil</a>
+          <a href="{% url 'password_change' %}">Cambiar contraseña</a>
+          <a href="mailto:{{ soporte_email }}">Soporte</a>
+          <div class="contacto-soporte">
+            <span>Correo provisional</span>
+            <a href="mailto:{{ soporte_email }}">{{ soporte_email }}</a>
+            <span>Teléfono provisional</span>
+            <a href="tel:{{ soporte_telefono|cut:' ' }}">{{ soporte_telefono }}</a>
+          </div>
+        </div>
+      </details>
       <form method="post" action="{% url 'logout' %}" style="display:inline">
         {% csrf_token %}
         <button type="submit" class="boton boton-chico boton-secundario">Salir</button>

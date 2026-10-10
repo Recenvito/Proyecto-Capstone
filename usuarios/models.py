@@ -46,6 +46,11 @@ class Usuario(AbstractUser):
         blank=True,
         verbose_name='N. registro Superintendencia de Salud',
     )
+    fecha_termino = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de desactivación',
+    )
 
     class Meta:
         verbose_name = 'Usuario'

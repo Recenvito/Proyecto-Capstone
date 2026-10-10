@@ -86,3 +86,38 @@ class UsuarioChangeForm(CorreoRecuperacionMixin, UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = Usuario
         fields = '__all__'
+
+
+class PerfilUsuarioForm(CorreoRecuperacionMixin, forms.ModelForm):
+    """Datos de perfil que el usuario puede mantener desde la aplicación."""
+
+    class Meta:
+        model = Usuario
+        fields = (
+            'first_name', 'last_name', 'email', 'rut', 'telefono',
+            'profesion', 'especialidad', 'registro_superintendencia',
+        )
+        labels = {
+            'first_name': 'Nombre',
+            'last_name': 'Apellidos',
+            'email': 'Correo electrónico',
+            'rut': 'RUT',
+            'telefono': 'Teléfono',
+            'profesion': 'Profesión',
+            'especialidad': 'Especialidad',
+            'registro_superintendencia': 'Registro profesional',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].required = True
+        for campo in self.fields.values():
+            campo.widget.attrs.setdefault('class', 'input')
+
+
+class UsuarioEdicionAdminForm(PerfilUsuarioForm):
+    """Edición administrativa del perfil, con username fuera del formulario."""
+
+    class Meta(PerfilUsuarioForm.Meta):
+        fields = PerfilUsuarioForm.Meta.fields + ('rol',)
+        labels = {**PerfilUsuarioForm.Meta.labels, 'rol': 'Rol'}

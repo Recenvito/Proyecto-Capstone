@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block titulo %}{% if es_edicion_admin %}Editar usuario{% else %}Mi perfil{% endif %}{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>{% if es_edicion_admin %}Editar usuario{% else %}Mi perfil{% endif %}</h1>
+    <p class="subtitulo">Actualiza los datos de la cuenta. El nombre de usuario es permanente y requiere soporte para cambiarse.</p>
+  </div>
+</div>
+
+<div class="tarjeta formulario-perfil">
+  <form method="post">
+    {% csrf_token %}
+    <fieldset>
+      <legend>Cuenta</legend>
+      <div class="campo">
+        <label for="username-fijo">Nombre de usuario</label>
+        <input id="username-fijo" class="input" value="{{ usuario.username }}" readonly aria-readonly="true">
+        <p class="ayuda">No se puede cambiar desde esta pantalla. Contacta a soporte si es necesario.</p>
+      </div>
+      <div class="grid grid-2">
+        {% for field in form %}
+          {% include '_campo.html' with campo=field %}
+        {% endfor %}
+      </div>
+    </fieldset>
+    <div class="acciones">
+      <button type="submit" class="boton">Guardar cambios</button>
+      {% if es_edicion_admin %}
+        <a href="{% url 'pacientes:historial_asignaciones' %}?vista=medicos{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}" class="boton boton-secundario">Volver a usuarios</a>
+      {% else %}
+        <a href="{% url 'inicio' %}" class="boton boton-secundario">Cancelar</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

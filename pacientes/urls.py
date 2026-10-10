@@ -6,6 +6,9 @@ app_name = 'pacientes'
 
 urlpatterns = [
     path('asignaciones/historial/', views.historial_asignaciones, name='historial_asignaciones'),
+    path('asignaciones/<int:pk>/estado/', views.cambiar_estado_asignacion, name='cambiar_estado_asignacion'),
+    path('medicos/<int:pk>/estado/', views.cambiar_estado_medico, name='cambiar_estado_medico'),
+    path('<int:pk>/estado/', views.cambiar_estado_paciente, name='cambiar_estado_paciente'),
     path('', views.lista, name='lista'),
     path('nuevo/', views.crear, name='crear'),
     path('<int:pk>/', views.detalle, name='detalle'),

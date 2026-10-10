@@ -1,27 +1,124 @@
 {% extends 'base.html' %}
-{% block titulo %}Historial de asignaciones{% endblock %}
+{% block titulo %}{% if vista == 'medicos' %}Médicos{% else %}Asignaciones{% endif %}{% endblock %}
 {% block contenido %}
 <div class="encabezado">
-  <div><h1>Historial de asignaciones profesionales</h1><p class="subtitulo">Asignaciones actuales y finalizadas.</p></div>
+  <div>
+    <h1>Administración de pacientes y médicos</h1>
+    <p class="subtitulo">Consulta médicos y gestiona el estado de las asignaciones.</p>
+  </div>
 </div>
+
+<div class="paginacion" aria-label="Secciones de administración">
+  <a class="paginacion-boton{% if vista == 'asignaciones' %} activo{% endif %}"
+     href="{% url 'pacientes:historial_asignaciones' %}?vista=asignaciones{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}">Asignaciones</a>
+  <a class="paginacion-boton{% if vista == 'medicos' %} activo{% endif %}"
+     href="{% url 'pacientes:historial_asignaciones' %}?vista=medicos{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}">Médicos</a>
+</div>
+
 <div class="tarjeta">
-  {% if asignaciones %}
-    <table>
-      <thead><tr><th>Paciente</th><th>Profesional</th><th>Inicio</th><th>Término</th><th>Estado</th></tr></thead>
-      <tbody>
-      {% for asignacion in asignaciones %}
-        <tr>
-          <td><a href="{% url 'pacientes:detalle' asignacion.paciente_id %}">{{ asignacion.paciente.nombre_completo }}</a></td>
-          <td>{{ asignacion.profesional.get_full_name|default:asignacion.profesional.username }}</td>
-          <td>{{ asignacion.fecha_asignacion|date:'d/m/Y H:i' }}</td>
-          <td>{% if asignacion.fecha_termino %}{{ asignacion.fecha_termino|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
-          <td>{% if asignacion.activa %}Activa{% else %}Finalizada{% endif %}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+  <form method="get" class="pacientes-filtros">
+    <input type="hidden" name="vista" value="{{ vista }}">
+    <div class="pacientes-buscador">
+      <span class="pacientes-icono" aria-hidden="true">🔎</span>
+      <input type="text" name="q" class="input" value="{{ busqueda }}"
+             placeholder="{% if vista == 'medicos' %}Buscar médico por nombre o especialidad...{% else %}Buscar por paciente, RUT o médico...{% endif %}"
+             aria-label="Buscar en {% if vista == 'medicos' %}médicos{% else %}asignaciones{% endif %}" autocomplete="off">
+    </div>
+    <button type="submit" class="boton">Buscar</button>
+    {% if busqueda %}<a href="{% url 'pacientes:historial_asignaciones' %}?vista={{ vista }}" class="boton boton-secundario">Limpiar</a>{% endif %}
+  </form>
+
+  {% if vista == 'medicos' %}
+    {% if medicos %}
+      <div class="tabla-responsive tabla-medicos-responsive">
+        <table class="tabla-pacientes tabla-medicos">
+          <thead><tr><th>Médico</th><th>Profesión</th><th>Especialidad</th><th>Inicio</th><th>Término</th><th>Estado</th><th>Acción</th></tr></thead>
+          <tbody>
+          {% for medico in medicos %}
+            <tr>
+              <td data-label="Médico">{{ medico.get_full_name|default:medico.username }}</td>
+              <td data-label="Profesión">{{ medico.profesion|default:'—' }}</td>
+              <td data-label="Especialidad">{{ medico.especialidad|default:'—' }}</td>
+              <td data-label="Inicio">{{ medico.date_joined|date:'d/m/Y' }}</td>
+              <td data-label="Término">{% if medico.fecha_termino %}{{ medico.fecha_termino|date:'d/m/Y' }}{% else %}—{% endif %}</td>
+              <td data-label="Estado">
+                {% if medico.is_active %}<span class="estado estado-activo">Activo</span>
+                {% else %}<span class="estado estado-inactivo">Desactivado</span>{% endif %}
+              </td>
+              <td data-label="Acción">
+                <details class="acciones-menu">
+                  <summary class="boton boton-chico boton-secundario">Acciones</summary>
+                  <div class="acciones-menu-panel">
+                    <form method="post" action="{% url 'pacientes:cambiar_estado_medico' medico.pk %}">
+                      {% csrf_token %}<input type="hidden" name="q" value="{{ busqueda }}"><input type="hidden" name="page" value="{{ medicos.number }}">
+                      <button type="submit"{% if medico.is_active %} disabled{% endif %}>Activar</button>
+                    </form>
+                    <a href="{% url 'editar_usuario' medico.pk %}?q={{ busqueda|urlencode }}&page={{ medicos.number }}">Editar</a>
+                    <form method="post" action="{% url 'pacientes:cambiar_estado_medico' medico.pk %}">
+                      {% csrf_token %}<input type="hidden" name="q" value="{{ busqueda }}"><input type="hidden" name="page" value="{{ medicos.number }}">
+                      <button type="submit"{% if not medico.is_active %} disabled{% endif %}>Desactivar</button>
+                    </form>
+                  </div>
+                </details>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if medicos.has_other_pages %}
+        <div class="paginacion">
+          {% if medicos.has_previous %}<a href="?vista=medicos&page={{ medicos.previous_page_number }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}" class="paginacion-boton">←</a>{% endif %}
+          {% for numero in medicos.paginator.page_range %}
+            {% if medicos.number == numero %}<span class="paginacion-boton activo">{{ numero }}</span>
+            {% else %}<a href="?vista=medicos&page={{ numero }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}" class="paginacion-boton">{{ numero }}</a>{% endif %}
+          {% endfor %}
+          {% if medicos.has_next %}<a href="?vista=medicos&page={{ medicos.next_page_number }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}" class="paginacion-boton">→</a>{% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <p class="vacio">No se encontraron médicos.</p>
+    {% endif %}
+  {% elif asignaciones %}
+    <div class="tabla-responsive">
+      <table class="tabla-pacientes tabla-asignaciones">
+        <thead><tr><th>Paciente</th><th>Profesional</th><th>Inicio</th><th>Término</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>
+        {% for asignacion in asignaciones %}
+          <tr>
+            <td><a href="{% url 'pacientes:detalle' asignacion.paciente_id %}">{{ asignacion.paciente.nombre_completo }}</a></td>
+            <td>{{ asignacion.profesional.get_full_name|default:asignacion.profesional.username }}</td>
+            <td>{{ asignacion.fecha_asignacion|date:'d/m/Y H:i' }}</td>
+            <td>{% if asignacion.fecha_termino %}{{ asignacion.fecha_termino|date:'d/m/Y' }}{% else %}—{% endif %}</td>
+            <td>{% if asignacion.activa %}Activa{% else %}Desactivada{% endif %}</td>
+            <td>
+              <form method="post" action="{% url 'pacientes:cambiar_estado_asignacion' asignacion.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="vista" value="{{ vista }}">
+                <input type="hidden" name="q" value="{{ busqueda }}">
+                <input type="hidden" name="page" value="{{ asignaciones.number }}">
+                <button type="submit" class="boton boton-chico{% if asignacion.activa %} boton-secundario{% endif %}">
+                  {% if asignacion.activa %}Desactivar{% else %}Activar{% endif %}
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+      {% if asignaciones.has_other_pages %}
+        <div class="paginacion">
+          {% if asignaciones.has_previous %}<a href="?vista=asignaciones&page={{ asignaciones.previous_page_number }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}" class="paginacion-boton">←</a>{% endif %}
+          {% for numero in asignaciones.paginator.page_range %}
+            {% if asignaciones.number == numero %}<span class="paginacion-boton activo">{{ numero }}</span>
+            {% else %}<a href="?vista=asignaciones&page={{ numero }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}" class="paginacion-boton">{{ numero }}</a>{% endif %}
+          {% endfor %}
+          {% if asignaciones.has_next %}<a href="?vista=asignaciones&page={{ asignaciones.next_page_number }}{% if busqueda %}&q={{ busqueda|urlencode }}{% endif %}" class="paginacion-boton">→</a>{% endif %}
+        </div>
+      {% endif %}
   {% else %}
-    <p class="vacio">Todavía no hay asignaciones.</p>
+    <p class="vacio">No se encontraron asignaciones.</p>
   {% endif %}
 </div>
 {% endblock %}

@@ -8,6 +8,7 @@ from .forms import UsuarioChangeForm, UsuarioCreationForm
 class UsuarioAdmin(UserAdmin):
     form = UsuarioChangeForm
     add_form = UsuarioCreationForm
+    readonly_fields = ('fecha_termino',)
     list_display = ('username', 'get_full_name', 'rol', 'profesion', 'especialidad', 'email', 'is_active')
     list_filter = ('rol', 'is_active', 'is_staff')
     search_fields = ('username', 'first_name', 'last_name', 'rut', 'email')
@@ -15,7 +16,7 @@ class UsuarioAdmin(UserAdmin):
     # Agregamos nuestros campos a los formularios que ya trae Django
     fieldsets = UserAdmin.fieldsets + (
         ('Datos del sistema', {
-            'fields': ('rol', 'rut', 'telefono', 'profesion', 'especialidad', 'registro_superintendencia'),
+            'fields': ('rol', 'rut', 'telefono', 'profesion', 'especialidad', 'registro_superintendencia', 'fecha_termino'),
         }),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
@@ -23,6 +24,11 @@ class UsuarioAdmin(UserAdmin):
             'fields': ('rol', 'first_name', 'last_name', 'email', 'rut', 'telefono', 'profesion', 'especialidad'),
         }),
     )
+
+    def get_readonly_fields(self, request, obj=None):
+        # El username se fija al crear la cuenta y no se modifica después.
+        campos = super().get_readonly_fields(request, obj)
+        return ('username', *campos) if obj else campos
 
 @admin.register(AuditoriaAcceso)
 class AuditoriaAccesoAdmin(admin.ModelAdmin):

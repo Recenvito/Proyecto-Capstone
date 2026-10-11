@@ -1,9 +1,34 @@
 from datetime import date
+from pathlib import Path
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
+from django.utils.text import get_valid_filename
+
+
+MAXIMO_INFORME_BYTES = 10 * 1024 * 1024
+
+
+def validar_archivo_pdf(archivo):
+    if Path(archivo.name).suffix.lower() != '.pdf':
+        raise ValidationError('El informe debe estar en formato PDF.')
+    posicion = archivo.tell() if hasattr(archivo, 'tell') else None
+    cabecera = archivo.read(5)
+    if posicion is not None:
+        archivo.seek(posicion)
+    if cabecera != b'%PDF-':
+        raise ValidationError('El archivo no parece ser un PDF válido.')
+    if archivo.size > MAXIMO_INFORME_BYTES:
+        raise ValidationError('El informe no puede superar los 10 MB.')
+
+
+def ruta_informe_paciente(instancia, nombre_archivo):
+    nombre_seguro = get_valid_filename(Path(nombre_archivo).name)
+    return f'informes/paciente_{instancia.paciente_id}/{timezone.now():%Y/%m}/{nombre_seguro}'
 
 
 class Paciente(models.Model):
@@ -139,6 +164,10 @@ class Tutor(models.Model):
     paciente = models.ForeignKey(
         Paciente, on_delete=models.CASCADE, related_name='tutores',
     )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='vinculos_tutor', verbose_name='Cuenta del tutor',
+    )
     rut = models.CharField(max_length=12, blank=True, verbose_name='RUT')
     nombre_completo = models.CharField(max_length=150)
     parentesco = models.CharField(max_length=20, choices=Parentesco.choices)
@@ -157,6 +186,76 @@ class Tutor(models.Model):
 
     def __str__(self):
         return f'{self.nombre_completo} ({self.get_parentesco_display()})'
+
+
+class DocumentoPaciente(models.Model):
+    """Copia documental publicada por la clínica para representantes autorizados."""
+
+    paciente = models.ForeignKey(
+        Paciente, on_delete=models.PROTECT, related_name='documentos_portal',
+    )
+    titulo = models.CharField(max_length=150)
+    descripcion = models.CharField(max_length=300, blank=True)
+    archivo = models.FileField(
+        upload_to=ruta_informe_paciente,
+        validators=[FileExtensionValidator(['pdf']), validar_archivo_pdf],
+    )
+    fecha_documento = models.DateField(default=timezone.localdate)
+    publicado = models.BooleanField(default=False)
+    subido_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='documentos_pacientes_subidos',
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Informe para portal de pacientes'
+        verbose_name_plural = 'Informes para portal de pacientes'
+        ordering = ['-fecha_documento', '-creado_en']
+
+    def __str__(self):
+        return f'{self.titulo} · {self.paciente.nombre_completo}'
+
+    def clean(self):
+        super().clean()
+        if self.archivo and self.archivo.size > MAXIMO_INFORME_BYTES:
+            raise ValidationError({'archivo': 'El informe no puede superar los 10 MB.'})
+
+
+class SolicitudAccesoTutor(models.Model):
+    """Solicitud privada para vincular una cuenta verificada con una ficha."""
+
+    class Estado(models.TextChoices):
+        PENDIENTE = 'PENDIENTE', 'Pendiente de revisión clínica'
+        APROBADA = 'APROBADA', 'Aprobada'
+        RECHAZADA = 'RECHAZADA', 'Rechazada'
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='solicitudes_vinculo_tutor',
+    )
+    paciente_rut = models.CharField(max_length=12, verbose_name='RUT de paciente solicitado')
+    parentesco = models.CharField(max_length=20, choices=Tutor.Parentesco.choices)
+    estado = models.CharField(max_length=12, choices=Estado.choices, default=Estado.PENDIENTE)
+    creada_en = models.DateTimeField(auto_now_add=True)
+    revisada_en = models.DateTimeField(null=True, blank=True)
+    revisada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='solicitudes_vinculo_revisadas',
+    )
+
+    class Meta:
+        verbose_name = 'Solicitud de acceso de tutor'
+        verbose_name_plural = 'Solicitudes de acceso de tutores'
+        ordering = ['estado', '-creada_en']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['usuario', 'paciente_rut'], name='solicitud_tutor_usuario_rut_unica',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.usuario} solicita acceso a ficha {self.paciente_rut}'
 
 
 class AntecedentesNeurologicos(models.Model):

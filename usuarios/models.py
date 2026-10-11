@@ -19,6 +19,7 @@ class Usuario(AbstractUser):
         ADMIN = 'ADMIN', 'Administrador'
         MEDICO = 'MEDICO', 'Medico'
         SECRETARIA = 'SECRETARIA', 'Secretaria'
+        TUTOR = 'TUTOR', 'Tutor / paciente'
 
     rol = models.CharField(
         max_length=20,
@@ -51,6 +52,8 @@ class Usuario(AbstractUser):
         blank=True,
         verbose_name='Fecha de desactivación',
     )
+    correo_verificado = models.BooleanField(default=False, verbose_name='Correo verificado')
+    telefono_verificado = models.BooleanField(default=False, verbose_name='Telefono verificado')
 
     class Meta:
         verbose_name = 'Usuario'

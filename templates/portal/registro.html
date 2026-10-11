@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block titulo %}Crear cuenta familiar · NeuroFicha{% endblock %}
+{% block contenido %}
+<section class="tarjeta" style="max-width:760px;margin:0 auto">
+  <div class="encabezado"><div><h1>Crear cuenta de tutor</h1><p class="subtitulo">Verificaremos tu correo y la clínica confirmará tu teléfono y representación antes de mostrar una ficha.</p></div></div>
+  <div class="mensaje aviso">El RUT del paciente solo inicia la solicitud. Esta página no confirma si la ficha existe ni muestra datos clínicos.</div>
+  <form method="post" class="formulario">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="mensaje error">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="grid-formulario">
+      {% for field in form %}<div class="campo"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<small class="error-texto">{{ error }}</small>{% endfor %}</div>{% endfor %}
+    </div>
+    <p class="subtitulo">La contraseña debe tener al menos 12 caracteres y cumplir las reglas de seguridad del sistema.</p>
+    <div class="acciones-formulario"><button class="boton" type="submit">Enviar solicitud</button><a class="boton boton-secundario" href="{% url 'login' %}">Volver a iniciar sesión</a></div>
+  </form>
+</section>
+{% endblock %}

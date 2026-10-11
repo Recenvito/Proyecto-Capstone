@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block titulo %}Solicitar vínculo · NeuroFicha{% endblock %}
+{% block contenido %}
+<section class="tarjeta" style="max-width:680px;margin:0 auto"><h1>Solicitar acceso a otra ficha</h1><p class="subtitulo">La clínica confirmará la representación antes de mostrar datos.</p><form method="post" class="formulario">{% csrf_token %}{% if form.non_field_errors %}<div class="mensaje error">{{ form.non_field_errors }}</div>{% endif %}{% for field in form %}<div class="campo"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="error-texto">{{ error }}</small>{% endfor %}</div>{% endfor %}<div class="acciones-formulario"><button class="boton" type="submit">Enviar solicitud</button><a class="boton boton-secundario" href="{% url 'portal:inicio' %}">Cancelar</a></div></form></section>
+{% endblock %}

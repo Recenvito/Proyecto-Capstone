@@ -1,10 +1,19 @@
 from datetime import datetime, timedelta
+import uuid
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+
+
+def generar_orden_compra():
+    return uuid.uuid4().hex[:26]
+
+
+def generar_sesion_pago():
+    return uuid.uuid4().hex
 
 
 class Disponibilidad(models.Model):
@@ -166,6 +175,10 @@ class Cita(models.Model):
         ).exclude(pk=self.pk)
 
         for otra in choque:
+            pago = getattr(otra, 'pago', None)
+            if (pago and pago.estado == PagoCita.Estado.INICIADA and pago.expira_en
+                    and pago.expira_en <= timezone.now()):
+                continue
             if otra.fecha_hora_fin > self.fecha_hora:
                 raise ValidationError(
                     f'El profesional ya tiene una hora agendada a las '
@@ -183,3 +196,60 @@ class Cita(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class TarifaServicio(models.Model):
+    """Tarifa vigente configurada por la clínica; el sistema no inventa precios."""
+
+    tipo = models.CharField(max_length=20, choices=Cita.Tipo.choices, unique=True)
+    monto_clp = models.PositiveIntegerField(verbose_name='Monto en pesos chilenos')
+    activa = models.BooleanField(default=True)
+    actualizada_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Tarifa de servicio'
+        verbose_name_plural = 'Tarifas de servicios'
+        ordering = ['tipo']
+
+    def __str__(self):
+        return f'{self.get_tipo_display()}: ${self.monto_clp:,} CLP'
+
+
+class PagoCita(models.Model):
+    """Registro de pago Webpay Plus o pago presencial asociado a una cita."""
+
+    class Metodo(models.TextChoices):
+        WEBPAY = 'WEBPAY', 'Webpay'
+        PRESENCIAL = 'PRESENCIAL', 'Pago en clínica'
+
+    class Estado(models.TextChoices):
+        POR_PAGAR = 'POR_PAGAR', 'Por pagar en clínica'
+        INICIADA = 'INICIADA', 'Pago Webpay iniciado'
+        PAGADA = 'PAGADA', 'Pagada'
+        FALLIDA = 'FALLIDA', 'Pago rechazado'
+        EXPIRADA = 'EXPIRADA', 'Reserva expirada'
+
+    cita = models.OneToOneField(Cita, on_delete=models.PROTECT, related_name='pago')
+    tutor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='pagos_citas')
+    metodo = models.CharField(max_length=12, choices=Metodo.choices)
+    estado = models.CharField(max_length=12, choices=Estado.choices)
+    monto_clp = models.PositiveIntegerField()
+    orden_compra = models.CharField(max_length=26, unique=True, default=generar_orden_compra)
+    sesion_id = models.CharField(max_length=32, default=generar_sesion_pago)
+    token_transbank = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    codigo_autorizacion = models.CharField(max_length=20, blank=True)
+    asignacion_vinculo_creado = models.BooleanField(default=False)
+    reintento_presencial = models.BooleanField(default=False)
+    comprobante_reserva_enviado_en = models.DateTimeField(null=True, blank=True)
+    comprobante_pago_enviado_en = models.DateTimeField(null=True, blank=True)
+    expira_en = models.DateTimeField(null=True, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Pago de cita'
+        verbose_name_plural = 'Pagos de citas'
+        ordering = ['-creado_en']
+
+    def __str__(self):
+        return f'{self.cita_id} - {self.get_estado_display()} - ${self.monto_clp} CLP'

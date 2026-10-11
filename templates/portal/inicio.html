@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block titulo %}Mi portal · NeuroFicha{% endblock %}
+{% block contenido %}
+<div class="encabezado"><div><h1>Hola, {{ user.first_name }}</h1><p class="subtitulo">Gestiona tus vínculos familiares y horas reservadas.</p></div><a class="boton" href="{% url 'portal:reservar' %}">Reservar una hora</a></div>
+{% if not contactos_verificados %}<div class="mensaje aviso">La clínica debe verificar tu teléfono y confirmar el vínculo antes de habilitar las fichas.</div>{% endif %}
+{% if solicitudes %}<section class="tarjeta"><h2>Solicitudes de acceso</h2><ul>{% for solicitud in solicitudes %}<li>{{ solicitud.get_parentesco_display }} · {{ solicitud.get_estado_display }}</li>{% endfor %}</ul></section>{% endif %}
+<section class="tarjeta"><h2>Pacientes vinculados</h2>
+  {% if vinculos %}<div class="grid-tarjetas">{% for vinculo in vinculos %}<article class="tarjeta tarjeta-anidada"><h3>{{ vinculo.paciente.nombre_completo }}</h3><p>{{ vinculo.paciente.edad_texto }}</p><p>Vínculo confirmado por la clínica</p></article>{% endfor %}</div>
+  {% else %}<p>Las fichas aparecerán aquí cuando la clínica verifique y apruebe tu solicitud.</p>{% endif %}
+</section>
+{% if contactos_verificados %}<section class="tarjeta"><h2>Vincular otro paciente</h2><p>La clínica verificará cada vínculo por separado. El RUT no confirma si existe una ficha.</p><a class="boton boton-secundario" href="{% url 'portal:solicitar_vinculo' %}">Solicitar acceso a otra ficha</a></section>{% endif %}
+<section class="tarjeta"><h2>Horas reservadas</h2>
+  {% if citas %}<div class="tabla-contenedor"><table><thead><tr><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Atención</th><th>Pago</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{% for cita in citas %}<tr>
+    <td>{{ cita.paciente.nombre_completo }}</td><td>{{ cita.profesional.get_full_name|default:cita.profesional.username }}</td><td>{{ cita.fecha_hora|date:'d/m/Y H:i' }}</td><td>{{ cita.get_tipo_display }}</td><td>{% if cita.pago %}{{ cita.pago.get_estado_display }}{% else %}—{% endif %}</td><td>{{ cita.get_estado_display }}</td>
+    <td>{% if cita.pago and cita.pago.metodo == 'PRESENCIAL' and cita.pago.estado == 'POR_PAGAR' and cita.estado == 'AGENDADA' and cita.pago.monto_clp > 0 %}
+      <form method="post" action="{% url 'portal:pagar_cita_webpay' cita.pk %}">{% csrf_token %}<button class="boton boton-secundario" type="submit">Pagar ahora con Webpay</button></form>
+    {% else %}—{% endif %}</td>
+  </tr>{% endfor %}</tbody></table></div>
+  {% else %}<p>Aún no tienes horas reservadas.</p>{% endif %}
+</section>
+<section class="tarjeta"><h2>Informes y antecedentes</h2>
+  {% if not contactos_verificados %}
+    <p>La clínica debe verificar tus datos y aprobar el vínculo con cada paciente antes de mostrar documentos.</p>
+  {% elif documentos %}
+    <p>La clínica publicó estas copias para los representantes autorizados. No se muestran notas internas de atención.</p>
+    <div class="grid-tarjetas">{% for documento in documentos %}<article class="tarjeta tarjeta-anidada">
+      <h3>{{ documento.titulo }}</h3><p><strong>Paciente:</strong> {{ documento.paciente.nombre_completo }}</p>
+      <p><strong>Fecha del documento:</strong> {{ documento.fecha_documento|date:'d/m/Y' }}</p>
+      {% if documento.descripcion %}<p>{{ documento.descripcion }}</p>{% endif %}
+      <a class="boton boton-secundario" href="{% url 'portal:descargar_documento' documento.pk %}">Descargar copia en PDF</a>
+    </article>{% endfor %}</div>
+  {% else %}
+    <p>Las copias existentes se publican aquí cuando la clínica las asocia a una ficha y autoriza su consulta por representantes vinculados.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -16,7 +16,8 @@ class UsuarioAdmin(UserAdmin):
     # Agregamos nuestros campos a los formularios que ya trae Django
     fieldsets = UserAdmin.fieldsets + (
         ('Datos del sistema', {
-            'fields': ('rol', 'rut', 'telefono', 'profesion', 'especialidad', 'registro_superintendencia', 'fecha_termino'),
+            'fields': ('rol', 'rut', 'telefono', 'correo_verificado', 'telefono_verificado',
+                       'profesion', 'especialidad', 'registro_superintendencia', 'fecha_termino'),
         }),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (

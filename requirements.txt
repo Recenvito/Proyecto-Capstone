@@ -6,4 +6,5 @@ mysqlclient==2.3.0
 pycparser==3.0
 python-dotenv==1.2.3
 sqlparse==0.6.0
+transbank-sdk==6.1.0
 typing_extensions==4.16.0

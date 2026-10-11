@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block titulo %}Revisa tu correo · NeuroFicha{% endblock %}
+{% block contenido %}
+<section class="tarjeta"><h1>Revisa tu correo</h1><p>Si la solicitud pudo registrarse, enviaremos un enlace de verificación. El vínculo con la ficha queda pendiente de la revisión de la clínica.</p><a class="boton" href="{% url 'login' %}">Ir a iniciar sesión</a></section>
+{% endblock %}

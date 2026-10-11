@@ -12,15 +12,20 @@
   <header class="barra">
     <span class="marca">NeuroFicha</span>
     <nav>
-      <a href="{% url 'inicio' %}">Inicio</a>
-      <a href="{% url 'agenda:calendario' %}">Agenda</a>
-            <a href="{% url 'pacientes:lista' %}">Pacientes</a>
-      {% if user.rol == 'ADMIN' %}
-        <a href="{% url 'lista_auditoria' %}">Auditoría</a>
-        <a href="{% url 'pacientes:historial_asignaciones' %}">Usuarios</a>
-      {% endif %}
-      {% if user.is_staff %}
-        <a href="/admin/">Administración</a>
+      {% if user.rol == 'TUTOR' %}
+        <a href="{% url 'portal:inicio' %}">Mi portal</a>
+        <a href="{% url 'portal:reservar' %}">Reservar hora</a>
+      {% else %}
+        <a href="{% url 'inicio' %}">Inicio</a>
+        <a href="{% url 'agenda:calendario' %}">Agenda</a>
+        <a href="{% url 'pacientes:lista' %}">Pacientes</a>
+        {% if user.rol == 'ADMIN' %}
+          <a href="{% url 'lista_auditoria' %}">Auditoría</a>
+          <a href="{% url 'pacientes:historial_asignaciones' %}">Usuarios</a>
+        {% endif %}
+        {% if user.is_staff %}
+          <a href="/admin/">Administración</a>
+        {% endif %}
       {% endif %}
     </nav>
     <div class="usuario">

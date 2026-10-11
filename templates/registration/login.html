@@ -1,226 +1,91 @@
 {% load static %}
 <!doctype html>
 <html lang="es">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Iniciar sesión</title>
-
+  <meta name="description" content="Accede de forma segura a NeuroFicha.">
+  <title>Iniciar sesión · NeuroFicha</title>
   <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
 </head>
+<body class="login-modern-body">
+  <main class="login-modern">
+    <section class="login-modern-form" aria-labelledby="login-title">
+      <div class="login-modern-inner">
+        <a class="login-modern-brand" href="{% url 'home' %}" aria-label="NeuroFicha, volver al inicio">
+          <span class="login-modern-brand-mark" aria-hidden="true">N</span>
+          <span><strong>NeuroFicha</strong><small>Atención y acompañamiento</small></span>
+        </a>
 
-<body>
+        <div class="login-modern-card">
+          <a class="login-back" href="{% url 'home' %}"><span aria-hidden="true">←</span> Volver al inicio</a>
+          <p class="login-modern-eyebrow">PORTAL NEUROFICHA</p>
+          <h1 id="login-title">Qué bueno tenerte de vuelta.</h1>
+          <p class="login-modern-subtitle">Ingresa tus credenciales para continuar con tu atención.</p>
 
-  <div class="login-pantalla">
+          {% if form.errors %}
+            <div class="login-modern-error" role="alert">Usuario o contraseña incorrectos. Revisa tus datos e inténtalo nuevamente.</div>
+          {% endif %}
 
-    <!-- =====================================================
-         PANEL IZQUIERDO
-         ===================================================== -->
+          <form method="post" class="login-modern-fields">
+            {% csrf_token %}
+            {% if redirect_field_value %}<input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">{% endif %}
+            <div class="login-modern-field">
+              <label for="id_username">Usuario</label>
+              <input type="text" name="username" id="id_username" autocomplete="username" placeholder="Escribe tu usuario" required autofocus>
+            </div>
+            <div class="login-modern-field">
+              <div class="login-password-label"><label for="id_password">Contraseña</label><a href="{% url 'password_reset' %}">¿La olvidaste?</a></div>
+              <input type="password" name="password" id="id_password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required>
+            </div>
+            <button type="submit" class="login-modern-submit">Iniciar sesión <span aria-hidden="true">→</span></button>
+          </form>
 
-    <section class="login-presentacion">
-
-      <!-- Logo / nombre del sistema -->
-      <div class="login-marca">
-
-        <div class="login-logo">
-
-          <div class="login-logo-icon">
-            ✚
-          </div>
-
-          <div class="login-logo-texto">
-            <strong>NeuroFicha</strong>
-
-            <small>
-              Sistema de gestión clínica
-            </small>
-          </div>
-
+          <p class="login-modern-register">¿Primera vez aquí? <a href="{% url 'portal:registro' %}">Crea una cuenta de tutor</a></p>
+          <div class="login-modern-secure"><span aria-hidden="true">⌑</span><p><strong>Acceso protegido</strong><small>La ficha clínica solo se muestra a pacientes y tutores autorizados.</small></p></div>
         </div>
 
+        <p class="login-modern-footer">© {% now "Y" %} NeuroFicha · Atención y acompañamiento</p>
       </div>
-
-
-      <!-- Presentación -->
-      <div class="login-descripcion">
-
-        <h1>
-          Gestión integral de
-          fichas clínicas.
-        </h1>
-
-        <p>
-          Centraliza el seguimiento de pacientes,
-          tratamientos, informes terapéuticos y
-          alertas clínicas en un solo sistema.
-        </p>
-
-      </div>
-
-
-      <!-- Indicadores -->
-      <div class="login-indicadores">
-
-        <div class="login-indicador">
-
-          <strong>148</strong>
-
-          <span>
-            Pacientes activos
-          </span>
-
-        </div>
-
-
-        <div class="login-indicador">
-
-          <strong>6</strong>
-
-          <span>
-            Profesionales
-          </span>
-
-        </div>
-
-
-        <div class="login-indicador">
-
-          <strong>97%</strong>
-
-          <span>
-            Seguimiento completo
-          </span>
-
-        </div>
-
-      </div>
-
     </section>
 
-
-    <!-- =====================================================
-         PANEL DERECHO
-         ===================================================== -->
-
-    <section class="login-formulario">
-
-      <div class="login-contenido">
-
-
-        <!-- Encabezado -->
-        <div class="login-titulo">
-
-          <h2>
-            Iniciar sesión
-          </h2>
-
-          <p>
-            Accede con tus credenciales institucionales
-          </p>
-
-        </div>
-
-
-        <!-- Mensaje de error -->
-        {% if form.errors %}
-
-          <div class="mensaje error">
-
-            Usuario o contraseña incorrectos.
-
-          </div>
-
-        {% endif %}
-
-
-        <!-- Formulario -->
-        <form method="post">
-
-          {% csrf_token %}
-
-
-          <!-- Usuario -->
-          <div class="campo login-campo">
-
-            <label for="id_username">
-              Usuario
-            </label>
-
-            <input
-              type="text"
-              name="username"
-              id="id_username"
-              class="input"
-              autocomplete="username"
-              required
-              autofocus
-            >
-
-          </div>
-
-
-          <!-- Contraseña -->
-          <div class="campo login-campo">
-
-            <label for="id_password">
-              Contraseña
-            </label>
-
-            <input
-              type="password"
-              name="password"
-              id="id_password"
-              class="input"
-              autocomplete="current-password"
-              required
-            >
-
-          </div>
-
-
-          <!-- Recuperación -->
-          <div class="login-recuperar">
-
-            <a href="{% url 'password_reset' %}">
-              ¿Olvidaste tu contraseña?
-            </a>
-
-          </div>
-
-
-          <!-- Botón -->
-          <button
-            type="submit"
-            class="boton login-boton"
-          >
-            Iniciar sesión
-          </button>
-
-
-          <!-- Información -->
-          <div class="login-aviso">
-
-            <p>
-              Acceso restringido a personal autorizado.
-            </p>
-
-            <span>
-              Datos protegidos según la normativa aplicable.
-            </span>
-
-          </div>
-
-
-        </form>
-
+    <aside class="login-modern-art" aria-label="Ilustración de un profesional de la salud">
+      <div class="login-art-grid" aria-hidden="true"></div>
+      <div class="login-art-orb login-art-orb-one" aria-hidden="true"></div>
+      <div class="login-art-orb login-art-orb-two" aria-hidden="true"></div>
+      <div class="login-art-copy"><p>UN EQUIPO CERCA DE TI</p><h2>La confianza también es parte del cuidado.</h2><span>Coordinamos cada etapa para que puedas enfocarte en lo importante.</span></div>
+      <div class="login-doctor-card">
+        <span class="login-doctor-badge"><span aria-hidden="true">✚</span> Equipo clínico</span>
+        <svg class="login-doctor-illustration" viewBox="0 0 420 500" role="img" aria-labelledby="doctor-title doctor-desc" xmlns="http://www.w3.org/2000/svg">
+          <title id="doctor-title">Profesional de la salud</title>
+          <desc id="doctor-desc">Personaje ilustrado con bata blanca, uniforme azul y estetoscopio.</desc>
+          <ellipse cx="214" cy="475" rx="133" ry="18" fill="#0E3B6B" opacity=".18"/>
+          <path d="M84 468c8-87 22-148 65-174 19-12 43-19 65-19s48 7 68 19c42 26 57 87 65 174H84Z" fill="#F8FCFF"/>
+          <path d="M155 302c14-13 36-22 59-22s45 9 60 22l-13 166h-91l-15-166Z" fill="#69A9DE"/>
+          <path d="M158 300l-34 17 34 85 31-42-18-59-13-1Zm108 0 34 17-33 85-31-42 18-59 12-1Z" fill="#FFFFFF" stroke="#C7DDF0" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M191 278v35c0 17 12 29 24 29s24-12 24-29v-35h-48Z" fill="#D99A7A"/>
+          <path d="M145 159c0-57 31-94 71-94s72 37 72 94v61c0 55-35 93-72 93s-71-38-71-93v-61Z" fill="#E9B395"/>
+          <path d="M143 172c-10-62 5-111 55-128 49-17 105 9 108 65 1 18-2 39-8 54-4-26-20-42-37-53-22 18-56 27-115 22l-3 40Z" fill="#173C63"/>
+          <path d="M144 172c-12-19-21-8-18 10 3 17 12 26 22 26l-4-36Zm142 0c12-19 21-8 18 10-3 17-12 26-22 26l4-36Z" fill="#DFA587"/>
+          <path d="M178 190c6-5 14-5 20 0m40 0c6-5 14-5 20 0" fill="none" stroke="#604B45" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="188" cy="202" r="4" fill="#283D50"/><circle cx="248" cy="202" r="4" fill="#283D50"/>
+          <path d="M215 207c-1 12-4 19-2 21 2 2 6 2 9 0" fill="none" stroke="#C68770" stroke-width="3" stroke-linecap="round"/>
+          <path d="M194 244c12 10 27 10 40 0" fill="none" stroke="#A75E61" stroke-width="4" stroke-linecap="round"/>
+          <path d="M176 282c9 17 25 27 38 27s30-10 39-27l-20-15h-38l-19 15Z" fill="#E9B395"/>
+          <path d="M181 316l33 35 33-35" fill="none" stroke="#4B91C6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M214 351v70m0-70c0 0-30 1-30 28s21 24 30 18m0-46s30 1 30 28-21 24-30 18" fill="none" stroke="#164D7D" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="214" cy="421" r="9" fill="#F5FAFF" stroke="#164D7D" stroke-width="5"/>
+          <path d="M135 320l-22 117m176-117 22 117" fill="none" stroke="#D6E7F4" stroke-width="4"/>
+          <path d="M113 437h45m111 0h45" stroke="#D6E7F4" stroke-width="4" stroke-linecap="round"/>
+          <path d="M100 468h228" stroke="#D7E9F6" stroke-width="4" stroke-linecap="round"/>
+          <rect x="270" y="341" width="35" height="50" rx="4" fill="#FFFFFF" stroke="#B9D3E8" stroke-width="3"/>
+          <path d="M278 353h18m-18 9h18m-18 9h13" stroke="#5895C7" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="login-doctor-caption"><span class="login-doctor-avatar">✚</span><span><strong>Atención centrada en las personas</strong><small>Escucha, coordinación y continuidad</small></span><span class="login-caption-check" aria-hidden="true">✓</span></div>
       </div>
-
-    </section>
-
-  </div>
-
+      <div class="login-art-dots" aria-hidden="true">✳ <span>✦</span></div>
+      <p class="login-art-quote">“Cuidar es acompañar cada paso.”</p>
+    </aside>
+  </main>
 </body>
-
 </html>

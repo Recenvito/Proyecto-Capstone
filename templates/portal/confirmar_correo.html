@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block titulo %}Confirmar correo · NeuroFicha{% endblock %}
+{% block contenido %}
+<section class="tarjeta"><h1>Confirmar correo electrónico</h1><p>Confirma que tienes acceso a esta dirección. Después, la clínica revisará tu teléfono y el vínculo con la ficha solicitada.</p><form method="post">{% csrf_token %}<button class="boton" type="submit">Confirmar correo</button></form></section>
+{% endblock %}

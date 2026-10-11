@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block titulo %}Continuar a Webpay · NeuroFicha{% endblock %}
+{% block contenido %}
+<section class="tarjeta"><h1>Continuar a Webpay</h1><p>La reserva está retenida por 15 minutos. El pago se procesa en el ambiente de integración de Transbank.</p><form method="post" action="{{ url_webpay }}"><input type="hidden" name="token_ws" value="{{ token_webpay }}"><button type="submit" class="boton">Ir a Webpay</button></form><p><a href="{% url 'portal:inicio' %}">Volver al portal</a></p></section>
+{% endblock %}

@@ -14,10 +14,25 @@ from pacientes.models import AsignacionProfesional, Paciente
 from .forms import PerfilUsuarioForm, UsuarioEdicionAdminForm
 
 
+def pagina_publica(request):
+  """Portada para visitantes; conserva el destino de cada tipo de usuario."""
+  if request.user.is_authenticated:
+    if request.user.rol == Usuario.Rol.TUTOR:
+      return redirect('portal:inicio')
+    return redirect('inicio')
+  return render(request, 'landing.html')
+
+
 class LoginAuditoriaView(auth_views.LoginView):
   """Login de Django con registro de auditoria."""
 
   template_name = 'registration/login.html'
+
+  def get_success_url(self):
+    usuario = self.request.user
+    if usuario.is_authenticated and usuario.rol == Usuario.Rol.TUTOR:
+      return reverse('portal:inicio')
+    return super().get_success_url()
 
   def form_valid(self, form):
     from .models import AuditoriaAcceso
@@ -188,9 +203,33 @@ def lista_auditoria(request):
 @login_required
 def editar_perfil(request):
     if request.method == 'POST':
+        datos_anteriores = Usuario.objects.only('email', 'telefono').get(pk=request.user.pk)
         form = PerfilUsuarioForm(request.POST, instance=request.user)
         if form.is_valid():
-            form.save()
+            email_anterior = datos_anteriores.email
+            telefono_anterior = datos_anteriores.telefono
+            usuario = form.save()
+            if usuario.rol == Usuario.Rol.TUTOR:
+                cambios = []
+                if usuario.email.casefold() != email_anterior.casefold():
+                    usuario.correo_verificado = False
+                    usuario.is_active = False
+                    cambios.extend(('correo_verificado', 'is_active'))
+                    messages.info(request, 'Confirma tu nuevo correo para volver a iniciar sesión.')
+                if usuario.telefono != telefono_anterior:
+                    usuario.telefono_verificado = False
+                    cambios.append('telefono_verificado')
+                    messages.info(request, 'La clínica deberá verificar tu nuevo teléfono antes de habilitar las fichas.')
+                if cambios:
+                    usuario.save(update_fields=tuple(cambios))
+                if usuario.email.casefold() != email_anterior.casefold():
+                    from portal.emails import enviar_verificacion_correo
+                    enviar_verificacion_correo(usuario, request)
+                from pacientes.models import Tutor
+                Tutor.objects.filter(usuario=usuario).update(
+                    nombre_completo=usuario.get_full_name() or usuario.username,
+                    email=usuario.email, telefono=usuario.telefono,
+                )
             messages.success(request, 'Tu perfil fue actualizado.')
             return redirect('editar_perfil')
     else:

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'usuarios',
     'pacientes',
     'agenda',
+    'portal',
 ]
 
 MIDDLEWARE = [
@@ -64,6 +65,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'config.middleware.AccesoDenegadoMiddleware',
+    'config.middleware.AccesoPortalTutorMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -172,7 +174,13 @@ AUTH_USER_MODEL = 'usuarios.Usuario'
 # A donde va el usuario despues de iniciar / cerrar sesion
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'inicio'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Webpay se mantiene fijado al ambiente de integración hasta disponer de
+# credenciales comerciales y completar la habilitación de producción.
+PORTAL_WEBPAY_ACTIVO = os.environ.get('PORTAL_WEBPAY_ACTIVO', '1') == '1'
+TRANSBANK_INTEGRATION_COMMERCE_CODE = os.environ.get('TRANSBANK_INTEGRATION_COMMERCE_CODE', '')
+TRANSBANK_INTEGRATION_API_KEY = os.environ.get('TRANSBANK_INTEGRATION_API_KEY', '')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

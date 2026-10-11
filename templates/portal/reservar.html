@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block titulo %}Reservar hora · NeuroFicha{% endblock %}
+{% block contenido %}
+<div class="encabezado"><div><h1>Buscar una hora</h1><p class="subtitulo">Los profesionales y horarios provienen de la agenda clínica vigente.</p></div><a class="boton boton-secundario" href="{% url 'portal:inicio' %}">Volver al portal</a></div>
+<section class="tarjeta">
+  <h2>1. Elige paciente, profesional y fecha</h2>
+  <form method="get" class="formulario"><div class="grid-formulario">
+    <div class="campo"><label for="id_paciente">Paciente vinculado</label>{{ form.paciente }}</div>
+    <div class="campo"><label for="id_profesional">Profesional</label>{{ form.profesional }}</div>
+    <div class="campo"><label for="id_fecha">Fecha</label><input class="input" type="date" name="fecha" id="id_fecha" value="{{ fecha|date:'Y-m-d' }}" min="{{ hoy|date:'Y-m-d' }}" max="{{ max_fecha }}" required></div>
+    <div class="campo"><label for="id_tipo">Tipo de atención</label>{{ form.tipo }}</div>
+  </div><div class="acciones-formulario"><button class="boton" type="submit">Ver horarios</button></div></form>
+</section>
+{% if medico_seleccionado %}<section class="tarjeta"><h2>2. Horarios disponibles · {{ medico_seleccionado.get_full_name|default:medico_seleccionado.username }}</h2>
+  {% if tarifas %}<p class="subtitulo">Las tarifas son configuradas por la clínica. Se mostrará el monto vigente antes de reservar.</p>{% else %}<div class="mensaje aviso">La clínica aún no ha configurado tarifas; la reserva no estará disponible hasta hacerlo.</div>{% endif %}
+  {% if cupos and tarifas %}<form method="post" class="formulario">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="mensaje error">{{ form.non_field_errors }}</div>{% endif %}
+    <input type="hidden" name="paciente" value="{{ form.paciente.value }}">
+    <input type="hidden" name="profesional" value="{{ form.profesional.value }}">
+    <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+    <input type="hidden" name="tipo" value="{{ form.tipo.value }}">
+    <div class="campo"><label for="id_forma_pago">Forma de pago</label>{{ form.forma_pago }}</div>
+    <div class="campo"><label for="id_motivo">Motivo breve (opcional)</label>{{ form.motivo }}</div>
+    <div class="campo"><strong>Tarifa:</strong> {% for clave, monto in tarifas.items %}{% if clave == form.tipo.value %}${{ monto }} CLP{% endif %}{% endfor %}</div>
+    <p>Elige un cupo; en Webpay la reserva queda retenida por 15 minutos mientras realizas el pago.</p>
+    <div class="lista-cupos">{% for hora, duracion, lugar in cupos %}<button class="boton boton-secundario" type="submit" name="hora" value="{{ hora|date:'Y-m-d\TH:i' }}">{{ hora|date:'H:i' }}{% if lugar %} · {{ lugar }}{% endif %}</button>{% endfor %}</div>
+    {% for error in form.hora.errors %}<small class="error-texto">{{ error }}</small>{% endfor %}
+  </form>{% elif tarifas %}<p>No hay horas libres para esta fecha. Prueba otro día o profesional.</p>{% endif %}
+</section>{% endif %}
+{% endblock %}

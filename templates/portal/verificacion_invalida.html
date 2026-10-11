@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block titulo %}Enlace no válido · NeuroFicha{% endblock %}
+{% block contenido %}
+<section class="tarjeta"><h1>Enlace no válido o vencido</h1><p>Solicita una nueva verificación con la clínica.</p><a class="boton" href="{% url 'login' %}">Iniciar sesión</a></section>
+{% endblock %}

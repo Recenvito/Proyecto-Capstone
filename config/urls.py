@@ -86,7 +86,8 @@ urlpatterns = [
   ),
 
   # Pantalla principal
-  path('', usuarios_views.inicio, name='inicio'),
+  path('', usuarios_views.pagina_publica, name='home'),
+  path('inicio/', usuarios_views.inicio, name='inicio'),
 
   # Auditoria
   path(
@@ -98,4 +99,5 @@ urlpatterns = [
   # Modulos
   path('pacientes/', include('pacientes.urls')),
   path('agenda/', include('agenda.urls')),
+  path('portal/', include('portal.urls')),
 ]

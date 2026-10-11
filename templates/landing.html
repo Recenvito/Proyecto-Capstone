@@ -1,0 +1,104 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="NeuroFicha: atención y seguimiento clínico con un espacio seguro para pacientes y sus familias.">
+  <title>NeuroFicha · Atención que acompaña</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body class="landing-body">
+  <div class="landing-page">
+    <header class="landing-header">
+      <a class="landing-brand" href="{% url 'home' %}" aria-label="NeuroFicha, inicio">
+        <span class="landing-brand-mark" aria-hidden="true">N</span>
+        <span class="landing-brand-copy"><strong>NeuroFicha</strong><small>Atención y acompañamiento</small></span>
+      </a>
+      <nav class="landing-nav" aria-label="Navegación principal">
+        <a href="#atencion">Atención</a>
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#preguntas">Preguntas frecuentes</a>
+      </nav>
+      <div class="landing-header-actions">
+        <a class="landing-login" href="{% url 'login' %}">Iniciar sesión</a>
+        <a class="landing-button landing-button-small" href="{% url 'portal:registro' %}">Crear cuenta</a>
+      </div>
+      <a class="landing-mobile-login" href="{% url 'login' %}" aria-label="Iniciar sesión">Entrar</a>
+    </header>
+
+    <main>
+      <section class="landing-hero" aria-labelledby="landing-title">
+        <div class="landing-hero-copy">
+          <p class="landing-eyebrow"><span class="landing-eyebrow-dot"></span> Un espacio para pacientes y familias</p>
+          <h1 id="landing-title">Cada proceso merece una atención <em>que acompaña.</em></h1>
+          <p class="landing-lead">Organiza tus horas y mantén a mano la información administrativa de las fichas vinculadas a tu familia, con un equipo clínico que te orienta en cada etapa.</p>
+          <div class="landing-hero-actions">
+            <a class="landing-button" href="{% url 'portal:registro' %}">Crear cuenta y comenzar <span aria-hidden="true">→</span></a>
+            <a class="landing-button-quiet" href="{% url 'login' %}">Ya tengo una cuenta</a>
+          </div>
+          <p class="landing-privacy"><span aria-hidden="true">✳</span> La ficha se habilita después de que la clínica verifica y aprueba el vínculo.</p>
+        </div>
+
+        <div class="landing-hero-art" aria-label="Ilustración de acompañamiento y cuidado">
+          <div class="landing-art-orbit landing-art-orbit-one"></div>
+          <div class="landing-art-orbit landing-art-orbit-two"></div>
+          <div class="landing-art-sun"></div>
+          <div class="landing-art-plant plant-left"><i></i><i></i><i></i><b></b></div>
+          <div class="landing-art-plant plant-right"><i></i><i></i><i></i><b></b></div>
+          <div class="landing-art-card">
+            <div class="landing-art-card-top"><span class="landing-art-symbol">N</span><span>NEUROFICHA <small>PORTAL FAMILIAR</small></span><span class="landing-art-card-dots">•••</span></div>
+            <div class="landing-art-illustration">
+              <div class="landing-art-head"><span></span></div>
+              <div class="landing-art-body"></div>
+              <div class="landing-art-heart" aria-hidden="true">♡</div>
+              <div class="landing-art-leaf leaf-one"></div><div class="landing-art-leaf leaf-two"></div>
+            </div>
+            <div class="landing-art-caption"><span>Un paso a la vez</span><small>Atención cercana, información clara</small></div>
+          </div>
+          <div class="landing-float-card landing-float-top"><span class="landing-float-icon">✓</span><span><strong>Vínculos protegidos</strong><small>Acceso revisado por la clínica</small></span></div>
+          <div class="landing-float-card landing-float-bottom"><span class="landing-float-icon calendar-icon">▦</span><span><strong>Agenda en línea</strong><small>Elige entre horas disponibles</small></span></div>
+          <span class="landing-art-star star-one" aria-hidden="true">✳</span>
+          <span class="landing-art-star star-two" aria-hidden="true">✳</span>
+        </div>
+      </section>
+
+      <section class="landing-trust-strip" aria-label="Beneficios del portal">
+        <div><span class="trust-icon">01</span><span><strong>Atención coordinada</strong><small>Agenda y seguimiento en un solo lugar</small></span></div>
+        <div><span class="trust-icon">02</span><span><strong>Acceso responsable</strong><small>La clínica revisa cada vínculo familiar</small></span></div>
+        <div><span class="trust-icon">03</span><span><strong>Acompañamiento continuo</strong><small>Información clara para cada etapa</small></span></div>
+      </section>
+
+      <section class="landing-section landing-care" id="atencion">
+        <div class="landing-section-heading">
+          <p class="landing-eyebrow">ATENCIÓN CON SENTIDO</p>
+          <h2>Un equipo que mira a la persona, no solo la consulta.</h2>
+          <p>NeuroFicha reúne la coordinación de profesionales, horas y seguimiento para facilitar la continuidad de la atención.</p>
+        </div>
+        <div class="landing-care-cards">
+          <article class="landing-care-card care-blue"><span class="care-number">01 / CONSULTA</span><div class="care-icon care-icon-blue" aria-hidden="true">＋</div><h3>Primera consulta</h3><p>Un espacio para conversar sobre el motivo de atención y orientar los siguientes pasos.</p></article>
+          <article class="landing-care-card care-green"><span class="care-number">02 / SEGUIMIENTO</span><div class="care-icon care-icon-green" aria-hidden="true">↗</div><h3>Controles y seguimiento</h3><p>Continúa el proceso con el profesional y las horas disponibles para tu atención.</p></article>
+          <article class="landing-care-card care-peach"><span class="care-number">03 / COORDINACIÓN</span><div class="care-icon care-icon-peach" aria-hidden="true">⌑</div><h3>Un equipo coordinado</h3><p>La agenda se conecta con el sistema clínico para que las reservas lleguen al equipo correspondiente.</p></article>
+        </div>
+      </section>
+
+      <section class="landing-process" id="como-funciona">
+        <div class="landing-process-intro"><p class="landing-eyebrow">TU PORTAL FAMILIAR</p><h2>Empezar es sencillo.<br><em>Y seguro.</em></h2><p>El acceso a una ficha siempre requiere la revisión del equipo de la clínica.</p><a class="landing-button landing-button-light" href="{% url 'portal:registro' %}">Crear cuenta <span aria-hidden="true">→</span></a></div>
+        <ol class="landing-steps">
+          <li><span class="step-index">01</span><div><h3>Crea tu cuenta</h3><p>Ingresa tus datos de contacto y solicita el vínculo con una ficha existente.</p></div></li>
+          <li><span class="step-index">02</span><div><h3>Verifica y confirma</h3><p>Verifica el correo. La clínica confirma el teléfono y revisa la representación.</p></div></li>
+          <li><span class="step-index">03</span><div><h3>Gestiona tus horas</h3><p>Al aprobar el vínculo, consulta las horas disponibles y reserva para el paciente.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="landing-first-visit" id="preguntas">
+        <div class="first-visit-icon" aria-hidden="true">i</div>
+        <div><h2>¿Es tu primera atención en la clínica?</h2><p>El portal vincula cuentas con fichas creadas por el equipo clínico. Si aún no tienes una ficha, consulta primero con la clínica para iniciar tu atención.</p></div>
+        <a href="{% url 'portal:registro' %}">Ya tengo una ficha <span aria-hidden="true">→</span></a>
+      </section>
+    </main>
+
+    <footer class="landing-footer"><a class="landing-brand" href="{% url 'home' %}"><span class="landing-brand-mark" aria-hidden="true">N</span><span class="landing-brand-copy"><strong>NeuroFicha</strong><small>Atención y acompañamiento</small></span></a><p>Tu información clínica se mantiene bajo acceso autorizado.</p><a href="{% url 'login' %}">Acceso al portal <span aria-hidden="true">→</span></a><small>© {% now "Y" %} NeuroFicha</small></footer>
+  </div>
+</body>
+</html>

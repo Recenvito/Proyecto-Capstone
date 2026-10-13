@@ -30,7 +30,9 @@ load_dotenv(BASE_DIR / '.env', override=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'inseguro-solo-para-desarrollo')
-SOPORTE_EMAIL = os.environ.get('SOPORTE_EMAIL', 'soporte@neuroficha.example')
+# Datos de contacto que muestra el menu de configuracion.
+# El correo es el definitivo de la consulta; el telefono sigue pendiente.
+SOPORTE_EMAIL = os.environ.get('SOPORTE_EMAIL', 'soporte@neaenlaces.cl')
 SOPORTE_TELEFONO = os.environ.get('SOPORTE_TELEFONO', '+56 9 0000 0000')
 
 # SECURITY WARNING: don't run with debug turned on in production!

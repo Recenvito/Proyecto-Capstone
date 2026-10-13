@@ -10,7 +10,7 @@
 <body>
   {% if user.is_authenticated %}
   <header class="barra">
-    <span class="marca">NeuroFicha</span>
+    <span class="marca">NEA Enlaces</span>
     <nav>
       {% if user.rol == 'TUTOR' %}
         <a href="{% url 'portal:inicio' %}">Mi portal</a>
@@ -37,7 +37,7 @@
           <a href="{% url 'password_change' %}">Cambiar contraseña</a>
           <a href="mailto:{{ soporte_email }}">Soporte</a>
           <div class="contacto-soporte">
-            <span>Correo provisional</span>
+            <span>Correo</span>
             <a href="mailto:{{ soporte_email }}">{{ soporte_email }}</a>
             <span>Teléfono provisional</span>
             <a href="tel:{{ soporte_telefono|cut:' ' }}">{{ soporte_telefono }}</a>

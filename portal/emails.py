@@ -26,7 +26,7 @@ def enviar_verificacion_correo(usuario, request):
         reverse('portal:verificar_correo', kwargs={'token': token})
     )
     send_mail(
-        'Verifica tu correo de NeuroFicha',
+        'Verifica tu correo de NEA Enlaces',
         f'Para verificar el correo de tu cuenta, abre este enlace válido por 24 horas:\n\n{enlace}\n\n'
         'La clínica revisará tu identidad, teléfono y representación antes de habilitar la ficha solicitada.',
         settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False,
@@ -58,7 +58,7 @@ def _enviar_comprobante(pago_id, campo, asunto, cuerpo):
             raise RuntimeError('El backend no confirmó el envío del correo.')
     except Exception:
         PagoCita.objects.filter(pk=pago.pk, **{campo: enviado_en}).update(**{campo: None})
-        logger.exception('No se pudo enviar el comprobante de NeuroFicha (pago %s).', pago.pk)
+        logger.exception('No se pudo enviar el comprobante de NEA Enlaces (pago %s).', pago.pk)
         return False
     return True
 
@@ -69,7 +69,7 @@ def enviar_comprobante_reserva(pago):
         fecha = timezone.localtime(cita.fecha_hora).strftime('%d/%m/%Y a las %H:%M')
         monto = f'${registro.monto_clp:,}'.replace(',', '.')
         return (
-            'Tu reserva fue registrada en NeuroFicha.\n\n'
+            'Tu reserva fue registrada en NEA Enlaces.\n\n'
             f'Paciente: {cita.paciente.nombre_completo}\n'
             f'Profesional: {cita.profesional.get_full_name() or cita.profesional.username}\n'
             f'Fecha y hora: {fecha}\n'
@@ -82,7 +82,7 @@ def enviar_comprobante_reserva(pago):
 
     return _enviar_comprobante(
         pago.pk, 'comprobante_reserva_enviado_en',
-        'Comprobante de reserva · NeuroFicha', cuerpo,
+        'Comprobante de reserva · NEA Enlaces', cuerpo,
     )
 
 
@@ -92,7 +92,7 @@ def enviar_comprobante_pago(pago):
         fecha = timezone.localtime(cita.fecha_hora).strftime('%d/%m/%Y a las %H:%M')
         monto = f'${registro.monto_clp:,}'.replace(',', '.')
         return (
-            'Registramos el pago asociado a tu atención en NeuroFicha.\n\n'
+            'Registramos el pago asociado a tu atención en NEA Enlaces.\n\n'
             f'Paciente: {cita.paciente.nombre_completo}\n'
             f'Profesional: {cita.profesional.get_full_name() or cita.profesional.username}\n'
             f'Fecha y hora de la atención: {fecha}\n'
@@ -106,5 +106,5 @@ def enviar_comprobante_pago(pago):
 
     return _enviar_comprobante(
         pago.pk, 'comprobante_pago_enviado_en',
-        'Comprobante de pago · NeuroFicha', cuerpo,
+        'Comprobante de pago · NEA Enlaces', cuerpo,
     )

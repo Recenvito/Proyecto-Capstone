@@ -203,5 +203,5 @@ EMAIL_USE_SSL = os.environ.get('DJANGO_EMAIL_USE_SSL', '0') == '1'
 EMAIL_HOST_USER = os.environ.get('DJANGO_EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('DJANGO_EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get(
-    'DJANGO_DEFAULT_FROM_EMAIL', 'NeuroFicha <no-reply@localhost>'
+    'DJANGO_DEFAULT_FROM_EMAIL', 'NEA Enlaces <no-reply@localhost>'
 )

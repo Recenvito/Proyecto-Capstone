@@ -1,4 +1,4 @@
-# NeuroFicha — Sistema de agenda y ficha clinica
+# NEA Enlaces — Sistema de agenda y ficha clinica
 
 Proyecto de tesis. Sistema web para digitalizar la consulta de una neurologa infantil:
 toma de horas, ficha clinica del paciente, antecedentes del desarrollo y registro de

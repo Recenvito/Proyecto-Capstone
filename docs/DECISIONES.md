@@ -1,4 +1,4 @@
-# Decisiones tecnicas — Proyecto NeuroFicha
+# Decisiones tecnicas — Proyecto NEA Enlaces
 
 Sistema de agenda y ficha clinica para consulta de neurologia infantil.
 

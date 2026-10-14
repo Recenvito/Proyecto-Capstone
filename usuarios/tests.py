@@ -472,7 +472,7 @@ class RecuperacionContrasenaTest(TestCase):
 
     @override_settings(
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
-        DEFAULT_FROM_EMAIL='NeuroFicha <no-reply@example.test>',
+        DEFAULT_FROM_EMAIL='NEA Enlaces <no-reply@example.test>',
     )
     def test_solicitud_envia_enlace_de_un_solo_uso(self):
         respuesta = self.client.post(reverse('password_reset'), {

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block titulo %}Mi portal · NeuroFicha{% endblock %}
+{% block titulo %}Mi portal · NEA Enlaces{% endblock %}
 {% block contenido %}
 <div class="encabezado"><div><h1>Hola, {{ user.first_name }}</h1><p class="subtitulo">Gestiona tus vínculos familiares y horas reservadas.</p></div><a class="boton" href="{% url 'portal:reservar' %}">Reservar una hora</a></div>
 {% if not contactos_verificados %}<div class="mensaje aviso">La clínica debe verificar tu teléfono y confirmar el vínculo antes de habilitar las fichas.</div>{% endif %}

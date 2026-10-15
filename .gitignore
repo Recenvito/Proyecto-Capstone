@@ -27,9 +27,13 @@ media/
 __pycache__/
 *.py[cod]
 
-# Wallet de Oracle Cloud (contiene credenciales)
+# Carpetas de credenciales
 wallet/
+
+# Comprimidos: bloqueados por defecto para no subir respaldos por error
 *.zip
+# Excepcion: entregables de documentacion del proyecto
+!docs/Fase2_1.zip
 
 # Archivos estaticos recolectados
 staticfiles/

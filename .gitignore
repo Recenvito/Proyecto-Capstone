@@ -33,6 +33,7 @@ wallet/
 # Comprimidos: bloqueados por defecto para no subir respaldos por error
 *.zip
 # Excepcion: entregables de documentacion del proyecto
+!docs/Fase1.zip
 !docs/Fase2_1.zip
 
 # Archivos estaticos recolectados

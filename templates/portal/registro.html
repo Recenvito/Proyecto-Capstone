@@ -9,7 +9,7 @@
     <div class="grid-formulario">
       {% for field in form %}<div class="campo"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<small class="error-texto">{{ error }}</small>{% endfor %}</div>{% endfor %}
     </div>
-    <p class="subtitulo">La contraseña debe tener al menos 12 caracteres y cumplir las reglas de seguridad del sistema.</p>
+    <p class="subtitulo">La contraseña debe tener al menos 8 caracteres y cumplir las reglas de seguridad del sistema.</p>
     <div class="acciones-formulario"><button class="boton" type="submit">Enviar solicitud</button><a class="boton boton-secundario" href="{% url 'login' %}">Volver a iniciar sesión</a></div>
   </form>
 </section>

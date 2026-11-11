@@ -509,17 +509,20 @@ class PoliticaContrasenasTest(TestCase):
             password='Inicio-Seguro-000!',
         )
 
-    def test_exige_complejidad_y_no_reutiliza_las_ultimas_cinco(self):
+    def test_exige_complejidad_y_no_reutiliza_las_ultimas_tres(self):
         for debil in (
             'corta',
+            'Siete-1',
             'sin-mayuscula-123!',
             'SinNumero-Clave!',
             'SinCaracterEspecial123',
         ):
             with self.subTest(contrasena=debil), self.assertRaises(ValidationError):
                 validate_password(debil, self.usuario)
+        # Ocho caracteres que cumplen la complejidad bastan.
+        validate_password('Ocho-12x', self.usuario)
 
-        for indice in range(1, 6):
+        for indice in range(1, 4):
             nueva = f'Fuerte-Clave-{indice:03d}!'
             validate_password(nueva, self.usuario)
             self.usuario.set_password(nueva)
@@ -527,7 +530,7 @@ class PoliticaContrasenasTest(TestCase):
 
         with self.assertRaises(ValidationError):
             validate_password('Fuerte-Clave-001!', self.usuario)
-        # La clave inicial es la sexta hacia atrás y queda fuera de la ventana.
+        # La clave inicial es la cuarta hacia atrás y queda fuera de la ventana.
         validate_password('Inicio-Seguro-000!', self.usuario)
 
 

@@ -73,7 +73,7 @@ class ValidadorComplejidadContrasena:
             raise ValidationError(_('La contraseña debe incluir al menos un carácter especial.'), code='sin_especial')
 
     def get_help_text(self):
-        return _('Usa al menos 12 caracteres, con mayúscula, minúscula, número y carácter especial.')
+        return _('Usa al menos 8 caracteres, con mayúscula, minúscula, número y carácter especial.')
 
 
 class ValidadorHistorialContrasenas:
@@ -83,9 +83,9 @@ class ValidadorHistorialContrasenas:
         if user.has_usable_password() and user.check_password(password):
             raise ValidationError(_('No puedes reutilizar tu contraseña actual.'), code='contrasena_actual')
         Historial = user._meta.apps.get_model('usuarios', 'HistorialContrasena')
-        recientes = Historial.objects.filter(usuario=user).order_by('-fecha_cambio', '-pk')[:4]
+        recientes = Historial.objects.filter(usuario=user).order_by('-fecha_cambio', '-pk')[:2]
         if any(check_password(password, registro.password_hash) for registro in recientes):
-            raise ValidationError(_('No puedes reutilizar ninguna de tus últimas 5 contraseñas.'), code='contrasena_reutilizada')
+            raise ValidationError(_('No puedes reutilizar ninguna de tus últimas 3 contraseñas.'), code='contrasena_reutilizada')
 
     def get_help_text(self):
-        return _('No se puede repetir ninguna de las últimas 5 contraseñas.')
+        return _('No se puede repetir ninguna de las últimas 3 contraseñas.')

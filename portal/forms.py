@@ -19,8 +19,8 @@ class RegistroTutorForm(forms.Form):
     telefono = forms.CharField(label='Teléfono de contacto', max_length=20, widget=forms.TextInput(attrs={'type': 'tel'}))
     rut_paciente = forms.CharField(label='RUT del paciente que representas', max_length=12)
     parentesco = forms.ChoiceField(label='Relación con el paciente', choices=Tutor.Parentesco.choices)
-    password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput, min_length=12)
-    password2 = forms.CharField(label='Repite la contraseña', widget=forms.PasswordInput, min_length=12)
+    password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput, min_length=8)
+    password2 = forms.CharField(label='Repite la contraseña', widget=forms.PasswordInput, min_length=8)
 
     def clean_rut_tutor(self):
         rut = normalizar_rut(self.cleaned_data['rut_tutor'])

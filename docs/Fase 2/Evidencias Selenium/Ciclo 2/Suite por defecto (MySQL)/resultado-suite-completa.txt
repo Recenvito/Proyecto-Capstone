@@ -1,0 +1,37 @@
+﻿venv\Scripts\python : Creating test database for alias 'default'...
+En línea: 9 Carácter: 1
++ venv\Scripts\python manage.py test --noinput *> "$scr\varB.txt"; "exi ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...as 'default'...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+..................................................................................F.[17/Nov/2026 19:55:33,465] - 
+Broken pipe from ('127.0.0.1', 64179)
+[17/Nov/2026 19:55:33,465] - Broken pipe from ('127.0.0.1', 58426)
+
+======================================================================
+FAIL: test_P009_tutor_reserva_hora_y_la_cita_se_registra 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P009_tutor_reserva_hora_y_la_cita_se_registra)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tests_e2e\test_selenium.py", line 231, in 
+test_P009_tutor_reserva_hora_y_la_cita_se_registra
+    self.assertTrue(Cita.objects.filter(
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+        paciente=self.paciente, profesional=self.medico,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        fecha_hora__date=self.fecha_reserva,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).exists())
+    ^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 84 tests in 118.837s
+
+FAILED (failures=1)
+Destroying test database for alias 'default'...
+
+Found 84 test(s).
+System check identified no issues (0 silenced).

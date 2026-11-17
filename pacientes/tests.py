@@ -26,7 +26,7 @@ class PacienteTest(TestCase):
     def test_un_escolar_muestra_la_edad_en_anios(self):
         hace_7_anios = date.today().replace(year=date.today().year - 7)
         paciente = self._crear(hace_7_anios, rut='66666666-6')
-        self.assertIn('anios', paciente.edad_texto)
+        self.assertIn('años', paciente.edad_texto)
 
     def test_el_nombre_completo_junta_nombres_y_apellidos(self):
         paciente = Paciente.objects.create(

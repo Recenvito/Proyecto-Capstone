@@ -80,10 +80,11 @@ def inicio(request):
   if request.user.es_medico:
     citas_hoy = citas_hoy.filter(profesional=request.user)
 
+  # Se filtra por rango y no con fecha_hora__date: en MySQL sin tablas de zona
+  # horaria (instalacion por defecto en Windows) ese filtro no devuelve nada.
   proximas = (
     Cita.objects
-    .filter(fecha_hora__gt=ahora, fecha_hora__lte=ahora + timedelta(days=7))
-    .exclude(fecha_hora__date=hoy)
+    .filter(fecha_hora__gte=inicio_manana, fecha_hora__lte=ahora + timedelta(days=7))
     .exclude(estado=Cita.Estado.CANCELADA)
     .select_related('paciente')
     .order_by('fecha_hora')

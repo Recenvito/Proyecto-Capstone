@@ -1,0 +1,90 @@
+﻿venv\Scripts\python : Creating test database for alias 'default' 
+('C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tmp\selenium\test_neuroficha_selenium.sqlite3')...
+En línea: 9 Carácter: 3
++   venv\Scripts\python manage.py test tests_e2e --settings=config.sett ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...um.sqlite3')...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Destroying old test database for alias 'default' 
+('C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tmp\selenium\test_neuroficha_selenium.sqlite3')...
+
+Found 10 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles
+  Apply all migrations: admin, agenda, auth, contenttypes, pacientes, portal, sessions, usuarios
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying usuarios.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying pacientes.0001_initial... OK
+  Applying agenda.0001_initial... OK
+  Applying agenda.0002_initial... OK
+  Applying agenda.0003_alter_cita_duracion_minutos_and_more... OK
+  Applying agenda.0004_tarifaservicio_pagocita... OK
+  Applying agenda.0005_pagocita_asignacion_vinculo_creado... OK
+  Applying agenda.0006_pago_reintento_y_comprobantes... OK
+  Applying pacientes.0002_initial... OK
+  Applying pacientes.0003_asignacionprofesional... OK
+  Applying pacientes.0004_asignacionprofesional_fecha_termino_and_more... OK
+  Applying pacientes.0005_tutor_usuario_solicitudaccesotutor... OK
+  Applying pacientes.0006_documentopaciente... OK
+  Applying portal.0001_initial... OK
+  Applying sessions.0001_initial... OK
+  Applying usuarios.0002_auditoriaacceso... OK
+  Applying usuarios.0003_auditoria... OK
+  Applying usuarios.0004_alter_auditoria_accion... OK
+  Applying usuarios.0005_usuario_profesion_alter_auditoria_accion... OK
+  Applying usuarios.0006_historialcontrasena... OK
+  Applying usuarios.0007_usuario_fecha_termino... OK
+test_P001_inicio_publico_y_acceso_a_login 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P001_inicio_publico_y_acceso_a_login) ... ok
+test_P002_credenciales_invalidas_muestran_error 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P002_credenciales_invalidas_muestran_error) ... ok
+test_P003_administrador_busca_paciente_ficticio 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P003_administrador_busca_paciente_ficticio) ... ok
+test_P004_medico_asignado_consulta_ficha_clinica 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P004_medico_asignado_consulta_ficha_clinica) ... ok
+test_P005_medico_no_asignado_recibe_denegacion 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P005_medico_no_asignado_recibe_denegacion) ... ok
+test_P006_secretaria_no_ve_controles_clinicos 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P006_secretaria_no_ve_controles_clinicos) ... ok
+test_P007_tutor_ve_solo_paciente_vinculado 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P007_tutor_ve_solo_paciente_vinculado) ... ok
+test_P008_tutor_consulta_horarios_y_tarifa 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P008_tutor_consulta_horarios_y_tarifa) ... ok
+test_P009_tutor_reserva_hora_y_la_cita_se_registra 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P009_tutor_reserva_hora_y_la_cita_se_registra) ... ok
+test_P010_tutor_no_accede_a_modulos_clinicos 
+(tests_e2e.test_selenium.FlujosSeleniumTest.test_P010_tutor_no_accede_a_modulos_clinicos) ... ok
+[17/Nov/2026 20:04:04,154] - Broken pipe from ('127.0.0.1', 59319)
+[17/Nov/2026 20:04:04,155] - Broken pipe from ('127.0.0.1', 60213)
+
+----------------------------------------------------------------------
+Ran 10 tests in 13.420s
+
+OK
+Destroying test database for alias 'default' 
+('C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tmp\selenium\test_neuroficha_selenium.sqlite3')...
+
+  Applying usuarios.0008_usuario_correo_verificado_and_more... OK
+System check identified no issues (0 silenced).

@@ -4,14 +4,14 @@
 
 La planilla `Casos de Prueba.xls.xlsx` registra los escenarios, los resultados esperados y obtenidos, el estado y la evidencia. Los flujos críticos de usuario se ejecutan con Selenium en Chrome o Edge. Las reglas de negocio y validaciones se verifican además con la suite Django existente. Ambos niveles se ejecutan contra SQLite temporal y datos ficticios; el archivo `.env`, el MySQL de desarrollo, el correo real y los cobros reales no se usan.
 
-Cada prueba de Selenium lleva un ID P-xxx y guarda una captura PNG al terminar, incluso cuando falla una aserción. La ruta predeterminada es `docs/Fase 2/Evidencias Selenium/Ciclo 1/`; los fallos quedan con sufijo `FALLO` o `ERROR`. El registro de defectos se completa solo con defectos reproducidos; no se asignan personas sin confirmación del equipo.
+Cada prueba de Selenium lleva un ID P-xxx y guarda una captura PNG al terminar, incluso cuando falla una aserción. La carpeta se elige con la variable `SELENIUM_CICLO` (por ejemplo `Ciclo 3` guarda en `docs/Fase 2/Evidencias Selenium/Ciclo 3/`) o con una ruta completa en `SELENIUM_EVIDENCE_DIR`. Sin ninguna de las dos, las capturas van a `tmp/selenium/evidencias/` (no se sube a GitHub), para no sobrescribir la evidencia de un ciclo ya cerrado. Los fallos quedan con sufijo `FALLO` o `ERROR`. El registro de defectos (`Planillas Excel/Registro de Defectos por Ciclo.xlsx`) se completa solo con defectos reproducidos; no se asignan personas sin confirmación del equipo.
 
 ## Preparación en Windows
 
-1. Abrir PowerShell en la carpeta del proyecto:
+1. Abrir PowerShell en la carpeta del proyecto (la que contiene `manage.py`; la ruta depende de cada equipo):
 
    ```powershell
-   cd C:\Users\TEB\Documents\GitHub\Proyecto-Capstone
+   cd <carpeta del proyecto>\Proyecto-Capstone
    ```
 
 2. Activar el entorno virtual recomendado por el README. Si aún no existe:
@@ -38,16 +38,18 @@ Cada prueba de Selenium lleva un ID P-xxx y guarda una captura PNG al terminar, 
    ```powershell
    $env:SELENIUM_BROWSER = 'chrome'
    $env:SELENIUM_HEADLESS = '1'
+   $env:SELENIUM_CICLO = 'Ciclo 3\Chrome'
    python manage.py test tests_e2e --settings=config.settings_selenium_browser --verbosity=2
    ```
 
-   Las capturas se guardan en la carpeta del ciclo. Para ver el navegador durante la ejecución, usar `$env:SELENIUM_HEADLESS = '0'`. La configuración E2E mantiene Webpay desactivado.
+   Las capturas se guardan en la carpeta del ciclo indicada en `SELENIUM_CICLO`. Usar siempre `--settings=config.settings_selenium_browser`: con la configuración normal, la suite corre contra MySQL. Para ver el navegador durante la ejecución, usar `$env:SELENIUM_HEADLESS = '0'`. La configuración E2E mantiene Webpay desactivado.
 
 5. Repetir en Edge:
 
    ```powershell
    $env:SELENIUM_BROWSER = 'edge'
    $env:SELENIUM_HEADLESS = '1'
+   $env:SELENIUM_CICLO = 'Ciclo 3\Edge'
    python manage.py test tests_e2e --settings=config.settings_selenium_browser --verbosity=2
    ```
 

@@ -1,15 +1,17 @@
 """Pruebas de extremo a extremo del navegador con evidencia PNG por caso.
 
-Ejecutar con:
-  python manage.py test tests_e2e --settings=config.settings_selenium
+Ejecutar con (ver docs/Fase 2/Plan de Pruebas Selenium.md):
+  python manage.py test tests_e2e --settings=config.settings_selenium_browser
 
 Cada caso usa un identificador P-xxx y guarda su captura en
-docs/Fase 2/Evidencias Selenium/Ciclo 1 (o SELENIUM_EVIDENCE_DIR).
+docs/Fase 2/Evidencias Selenium/<SELENIUM_CICLO> (por ejemplo, SELENIUM_CICLO=Ciclo 3)
+o en SELENIUM_EVIDENCE_DIR. Sin ninguna de las dos, las capturas van a
+tmp/selenium/evidencias, para no sobrescribir la evidencia de un ciclo ya cerrado.
 """
 
 import os
 import re
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -127,11 +129,14 @@ class FlujosSeleniumTest(StaticLiveServerTestCase):
         driver = getattr(self, 'driver', None)
         if not driver:
             return
-        evidence_dir = Path(os.environ.get(
-            'SELENIUM_EVIDENCE_DIR',
-            Path(__file__).resolve().parents[1] / 'docs' / 'Fase 2'
-            / 'Evidencias Selenium' / 'Ciclo 1',
-        ))
+        project_dir = Path(__file__).resolve().parents[1]
+        cycle = os.environ.get('SELENIUM_CICLO', '').strip()
+        if os.environ.get('SELENIUM_EVIDENCE_DIR'):
+            evidence_dir = Path(os.environ['SELENIUM_EVIDENCE_DIR'])
+        elif cycle:
+            evidence_dir = project_dir / 'docs' / 'Fase 2' / 'Evidencias Selenium' / cycle
+        else:
+            evidence_dir = project_dir / 'tmp' / 'selenium' / 'evidencias'
         evidence_dir.mkdir(parents=True, exist_ok=True)
         result = 'OK'
         outcome = getattr(getattr(self, '_outcome', None), 'result', None)
@@ -228,9 +233,11 @@ class FlujosSeleniumTest(StaticLiveServerTestCase):
         WebDriverWait(self.driver, 8).until(
             lambda driver: reverse('portal:inicio') in driver.current_url,
         )
+        # Rango en vez de fecha_hora__date: ese filtro falla en MySQL sin tablas de zona horaria.
+        inicio_dia = timezone.make_aware(datetime.combine(self.fecha_reserva, time.min))
         self.assertTrue(Cita.objects.filter(
             paciente=self.paciente, profesional=self.medico,
-            fecha_hora__date=self.fecha_reserva,
+            fecha_hora__gte=inicio_dia, fecha_hora__lt=inicio_dia + timedelta(days=1),
         ).exists())
 
     @tag('selenium', 'P-010')

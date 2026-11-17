@@ -1,0 +1,215 @@
+﻿venv\Scripts\python : Creating test database for alias 'default' 
+('C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tmp\selenium\test_neuroficha_selenium.sqlite3')...
+En línea: 4 Carácter: 1
++ venv\Scripts\python manage.py test agenda.tests pacientes.tests porta ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...um.sqlite3')...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Destroying old test database for alias 'default' 
+('C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tmp\selenium\test_neuroficha_selenium.sqlite3')...
+
+Found 75 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles
+  Apply all migrations: admin, agenda, auth, contenttypes, pacientes, portal, sessions, usuarios
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying usuarios.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying pacientes.0001_initial... OK
+  Applying agenda.0001_initial... OK
+  Applying agenda.0002_initial... OK
+  Applying agenda.0003_alter_cita_duracion_minutos_and_more... OK
+  Applying agenda.0004_tarifaservicio_pagocita... OK
+  Applying agenda.0005_pagocita_asignacion_vinculo_creado... OK
+  Applying agenda.0006_pago_reintento_y_comprobantes... OK
+  Applying pacientes.0002_initial... OK
+  Applying pacientes.0003_asignacionprofesional... OK
+  Applying pacientes.0004_asignacionprofesional_fecha_termino_and_more... OK
+  Applying pacientes.0005_tutor_usuario_solicitudaccesotutor... OK
+  Applying pacientes.0006_documentopaciente... OK
+  Applying portal.0001_initial... OK
+  Applying sessions.0001_initial... OK
+  Applying usuarios.0002_auditoriaacceso... OK
+  Applying usuarios.0003_auditoria... OK
+  Applying usuarios.0004_alter_auditoria_accion... OK
+  Applying usuarios.0005_usuario_profesion_alter_auditoria_accion... OK
+  Applying usuarios.0006_historialcontrasena... OK
+  Applying usuarios.0007_usuario_fecha_termino... OK
+test_la_disponibilidad_genera_la_cantidad_correcta_de_cupos 
+(agenda.tests.ReglasDeAgendaTest.test_la_disponibilidad_genera_la_cantidad_correcta_de_cupos) ... ok
+test_no_genera_cupos_en_un_dia_que_no_atiende 
+(agenda.tests.ReglasDeAgendaTest.test_no_genera_cupos_en_un_dia_que_no_atiende) ... ok
+test_no_se_agenda_dentro_de_un_bloqueo (agenda.tests.ReglasDeAgendaTest.test_no_se_agenda_dentro_de_un_bloqueo) ... ok
+test_no_se_permite_una_cita_que_se_solapa_parcialmente 
+(agenda.tests.ReglasDeAgendaTest.test_no_se_permite_una_cita_que_se_solapa_parcialmente) ... ok
+test_no_se_pueden_agendar_dos_pacientes_a_la_misma_hora 
+(agenda.tests.ReglasDeAgendaTest.test_no_se_pueden_agendar_dos_pacientes_a_la_misma_hora) ... ok
+test_si_se_puede_agendar_justo_despues_de_otra_cita 
+(agenda.tests.ReglasDeAgendaTest.test_si_se_puede_agendar_justo_despues_de_otra_cita) ... ok
+test_una_cita_cancelada_libera_el_cupo (agenda.tests.ReglasDeAgendaTest.test_una_cita_cancelada_libera_el_cupo) ... ok
+test_agenda_muestra_citas_aunque_no_haya_horario_y_no_permite_cambiar_medico (agenda.tests.VistasAgendaPorProfesionalTe
+st.test_agenda_muestra_citas_aunque_no_haya_horario_y_no_permite_cambiar_medico) ... ok
+test_busqueda_de_agenda_encuentra_citas_de_otras_fechas_solo_del_medico 
+(agenda.tests.VistasAgendaPorProfesionalTest.test_busqueda_de_agenda_encuentra_citas_de_otras_fechas_solo_del_medico) 
+... ok
+test_busqueda_de_pacientes_filtra_por_asignacion_del_medico 
+(agenda.tests.VistasAgendaPorProfesionalTest.test_busqueda_de_pacientes_filtra_por_asignacion_del_medico) ... ok
+test_formulario_de_cita_limita_al_medico_a_pacientes_asignados 
+(agenda.tests.VistasAgendaPorProfesionalTest.test_formulario_de_cita_limita_al_medico_a_pacientes_asignados) ... ok
+test_inicio_lista_proximas_citas_sin_incluir_las_de_hoy 
+(agenda.tests.VistasAgendaPorProfesionalTest.test_inicio_lista_proximas_citas_sin_incluir_las_de_hoy) ... ok
+test_inicio_muestra_conteo_asignado_y_solo_citas_del_medico 
+(agenda.tests.VistasAgendaPorProfesionalTest.test_inicio_muestra_conteo_asignado_y_solo_citas_del_medico) ... ok
+test_calcula_bien_la_edad_en_anios (pacientes.tests.PacienteTest.test_calcula_bien_la_edad_en_anios) ... ok
+test_el_nombre_completo_funciona_sin_apellido_materno 
+(pacientes.tests.PacienteTest.test_el_nombre_completo_funciona_sin_apellido_materno) ... ok
+test_el_nombre_completo_junta_nombres_y_apellidos 
+(pacientes.tests.PacienteTest.test_el_nombre_completo_junta_nombres_y_apellidos) ... ok
+test_un_escolar_muestra_la_edad_en_anios (pacientes.tests.PacienteTest.test_un_escolar_muestra_la_edad_en_anios) ... ok
+test_un_lactante_muestra_la_edad_en_meses (pacientes.tests.PacienteTest.test_un_lactante_muestra_la_edad_en_meses) ... 
+ok
+test_valida_rut_nombre_y_fecha_de_nacimiento 
+(pacientes.tests.ValidacionesFichaTest.test_valida_rut_nombre_y_fecha_de_nacimiento) ... ok
+test_valida_telefono_y_correo_del_tutor 
+(pacientes.tests.ValidacionesFichaTest.test_valida_telefono_y_correo_del_tutor) ... ok
+test_admin_solo_puede_aprobar_si_correo_y_telefono_estan_verificados 
+(portal.tests.PortalTutorTest.test_admin_solo_puede_aprobar_si_correo_y_telefono_estan_verificados) ... ok
+test_administracion_registra_pago_presencial_y_confirma_la_cita 
+(portal.tests.PortalTutorTest.test_administracion_registra_pago_presencial_y_confirma_la_cita) ... ok
+test_cambio_de_correo_desactiva_sesion_hasta_verificar_el_nuevo 
+(portal.tests.PortalTutorTest.test_cambio_de_correo_desactiva_sesion_hasta_verificar_el_nuevo) ... ok
+test_cambio_de_telefono_requiere_verificacion_antes_de_mostrar_fichas 
+(portal.tests.PortalTutorTest.test_cambio_de_telefono_requiere_verificacion_antes_de_mostrar_fichas) ... ok
+test_cancelar_webpay_de_pago_posterior_conserva_la_reserva 
+(portal.tests.PortalTutorTest.test_cancelar_webpay_de_pago_posterior_conserva_la_reserva) ... ok
+test_clinica_aprueba_vinculo_tras_verificar_contactos 
+(portal.tests.PortalTutorTest.test_clinica_aprueba_vinculo_tras_verificar_contactos) ... ok
+test_documento_no_publicado_o_de_otra_ficha_no_se_entrega 
+(portal.tests.PortalTutorTest.test_documento_no_publicado_o_de_otra_ficha_no_se_entrega) ... ok
+test_informe_publicado_solo_se_descarga_por_tutor_autorizado_y_se_audita 
+(portal.tests.PortalTutorTest.test_informe_publicado_solo_se_descarga_por_tutor_autorizado_y_se_audita) ... ok
+test_inicio_de_sesion_del_personal_redirige_al_panel_movido 
+(portal.tests.PortalTutorTest.test_inicio_de_sesion_del_personal_redirige_al_panel_movido) ... ok
+test_intento_webpay_vencido_retorna_a_pago_presencial_sin_liberar_hora 
+(portal.tests.PortalTutorTest.test_intento_webpay_vencido_retorna_a_pago_presencial_sin_liberar_hora) ... ok
+test_login_de_tutor_lo_envia_al_portal (portal.tests.PortalTutorTest.test_login_de_tutor_lo_envia_al_portal) ... ok
+test_no_se_puede_reservar_sin_vinculo_aprobado_o_sin_tarifa 
+(portal.tests.PortalTutorTest.test_no_se_puede_reservar_sin_vinculo_aprobado_o_sin_tarifa) ... ok
+test_pago_webpay_posterior_rechazado_conserva_la_reserva_para_pago_en_clinica 
+(portal.tests.PortalTutorTest.test_pago_webpay_posterior_rechazado_conserva_la_reserva_para_pago_en_clinica) ... ok
+test_panel_clinico_conserva_proteccion_de_autenticacion 
+(portal.tests.PortalTutorTest.test_panel_clinico_conserva_proteccion_de_autenticacion) ... ok
+test_personal_clinico_en_portada_va_al_panel_clinico 
+(portal.tests.PortalTutorTest.test_personal_clinico_en_portada_va_al_panel_clinico) ... ok
+test_reconcilia_pago_autorizado_antes_de_liberar_reserva_vencida 
+(portal.tests.PortalTutorTest.test_reconcilia_pago_autorizado_antes_de_liberar_reserva_vencida) ... ok
+test_registro_envia_verificacion_y_no_revela_si_ficha_existe 
+(portal.tests.PortalTutorTest.test_registro_envia_verificacion_y_no_revela_si_ficha_existe) ... ok
+test_reserva_presencial_crea_cita_en_agenda_clinica_y_envia_comprobante 
+(portal.tests.PortalTutorTest.test_reserva_presencial_crea_cita_en_agenda_clinica_y_envia_comprobante) ... ok
+test_reserva_webpay_solo_confirma_tras_commit_autorizado_y_envia_comprobantes 
+(portal.tests.PortalTutorTest.test_reserva_webpay_solo_confirma_tras_commit_autorizado_y_envia_comprobantes) ... ok
+test_token_de_correo_es_de_un_solo_uso_y_habilita_solo_portal 
+(portal.tests.PortalTutorTest.test_token_de_correo_es_de_un_solo_uso_y_habilita_solo_portal) ... ok
+test_tutor_autenticado_en_portada_va_a_su_portal 
+(portal.tests.PortalTutorTest.test_tutor_autenticado_en_portada_va_a_su_portal) ... ok
+test_tutor_puede_pagar_por_webpay_una_reserva_presencial_pendiente 
+(portal.tests.PortalTutorTest.test_tutor_puede_pagar_por_webpay_una_reserva_presencial_pendiente) ... ok
+test_tutor_verificado_puede_solicitar_vinculo_adicional_sin_consultar_el_rut 
+(portal.tests.PortalTutorTest.test_tutor_verificado_puede_solicitar_vinculo_adicional_sin_consultar_el_rut) ... ok
+test_visitante_recibe_portada_con_accesos_para_nuevos_y_recurrentes 
+(portal.tests.PortalTutorTest.test_visitante_recibe_portada_con_accesos_para_nuevos_y_recurrentes) ... ok
+test_carga_veinte_fichas_completas_y_es_idempotente 
+(usuarios.tests.CargaPacientesDemoTest.test_carga_veinte_fichas_completas_y_es_idempotente) ... ok
+test_admin_desactiva_medico_y_finaliza_asignaciones 
+(usuarios.tests.ControlDeAccesoTest.test_admin_desactiva_medico_y_finaliza_asignaciones) ... ok
+test_admin_edita_datos_del_usuario_sin_poder_cambiar_username 
+(usuarios.tests.ControlDeAccesoTest.test_admin_edita_datos_del_usuario_sin_poder_cambiar_username) ... ok
+test_admin_puede_buscar_medicos_en_la_seccion_correspondiente 
+(usuarios.tests.ControlDeAccesoTest.test_admin_puede_buscar_medicos_en_la_seccion_correspondiente) ... ok
+test_admin_puede_desactivar_y_reactivar_asignacion 
+(usuarios.tests.ControlDeAccesoTest.test_admin_puede_desactivar_y_reactivar_asignacion) ... ok
+test_desactivar_paciente_finaliza_asignaciones_y_reactivar_no_las_reabre 
+(usuarios.tests.ControlDeAccesoTest.test_desactivar_paciente_finaliza_asignaciones_y_reactivar_no_las_reabre) ... ok
+test_listados_de_asignaciones_y_medicos_se_paginan_de_a_quince 
+(usuarios.tests.ControlDeAccesoTest.test_listados_de_asignaciones_y_medicos_se_paginan_de_a_quince) ... ok
+test_medico_asignado_agrega_diagnostico_y_lo_ve_en_ficha 
+(usuarios.tests.ControlDeAccesoTest.test_medico_asignado_agrega_diagnostico_y_lo_ve_en_ficha) ... ok
+test_medico_asignado_puede_editar_antecedentes 
+(usuarios.tests.ControlDeAccesoTest.test_medico_asignado_puede_editar_antecedentes) ... ok
+test_medico_asignado_puede_registrar_una_atencion 
+(usuarios.tests.ControlDeAccesoTest.test_medico_asignado_puede_registrar_una_atencion) ... ok
+test_medico_asignado_registra_atencion_y_diagnostico_en_historial 
+(usuarios.tests.ControlDeAccesoTest.test_medico_asignado_registra_atencion_y_diagnostico_en_historial) ... ok
+test_medico_asignado_ve_la_ficha_clinica (usuarios.tests.ControlDeAccesoTest.test_medico_asignado_ve_la_ficha_clinica) 
+... ok
+test_medico_no_accede_a_paciente_inactivo_aunque_conserve_asignacion 
+(usuarios.tests.ControlDeAccesoTest.test_medico_no_accede_a_paciente_inactivo_aunque_conserve_asignacion) ... ok
+test_medico_no_asignado_no_puede_registrar_atenciones 
+(usuarios.tests.ControlDeAccesoTest.test_medico_no_asignado_no_puede_registrar_atenciones) ... ok
+test_medico_no_asignado_no_ve_la_ficha (usuarios.tests.ControlDeAccesoTest.test_medico_no_asignado_no_ve_la_ficha)
+Un medico no puede entrar a la ficha de un paciente que no trata. ... ok
+test_no_administrador_no_puede_cambiar_estado_de_medico 
+(usuarios.tests.ControlDeAccesoTest.test_no_administrador_no_puede_cambiar_estado_de_medico) ... ok
+test_perfil_no_permite_cambiar_username_ni_rol 
+(usuarios.tests.ControlDeAccesoTest.test_perfil_no_permite_cambiar_username_ni_rol) ... ok
+test_rol_no_administrativo_no_puede_activar_o_desactivar_paciente 
+(usuarios.tests.ControlDeAccesoTest.test_rol_no_administrativo_no_puede_activar_o_desactivar_paciente) ... ok
+test_rol_no_administrativo_no_puede_cambiar_estado_asignacion 
+(usuarios.tests.ControlDeAccesoTest.test_rol_no_administrativo_no_puede_cambiar_estado_asignacion) ... ok
+test_secretaria_no_ve_el_contenido_clinico_de_la_ficha 
+(usuarios.tests.ControlDeAccesoTest.test_secretaria_no_ve_el_contenido_clinico_de_la_ficha) ... ok
+test_secretaria_si_puede_usar_la_agenda (usuarios.tests.ControlDeAccesoTest.test_secretaria_si_puede_usar_la_agenda) 
+... ok
+test_secretaria_tiene_prohibido_editar_antecedentes 
+(usuarios.tests.ControlDeAccesoTest.test_secretaria_tiene_prohibido_editar_antecedentes) ... ok
+test_secretaria_tiene_prohibido_registrar_atenciones 
+(usuarios.tests.ControlDeAccesoTest.test_secretaria_tiene_prohibido_registrar_atenciones) ... ok
+test_una_asignacion_desactivada_revoca_el_acceso 
+(usuarios.tests.ControlDeAccesoTest.test_una_asignacion_desactivada_revoca_el_acceso)
+Al dar de baja la asignacion, el medico pierde el acceso a la ficha. ... ok
+test_usuario_no_administrador_no_puede_editar_otra_cuenta 
+(usuarios.tests.ControlDeAccesoTest.test_usuario_no_administrador_no_puede_editar_otra_cuenta) ... ok
+test_visitante_anonimo_es_redirigido_al_login 
+(usuarios.tests.ControlDeAccesoTest.test_visitante_anonimo_es_redirigido_al_login) ... ok
+test_visitante_anonimo_no_entra_a_la_agenda 
+(usuarios.tests.ControlDeAccesoTest.test_visitante_anonimo_no_entra_a_la_agenda) ... ok
+test_exige_complejidad_y_no_reutiliza_las_ultimas_tres 
+(usuarios.tests.PoliticaContrasenasTest.test_exige_complejidad_y_no_reutiliza_las_ultimas_tres) ... ok
+test_correo_es_obligatorio_y_unico_al_crear_usuarios 
+(usuarios.tests.RecuperacionContrasenaTest.test_correo_es_obligatorio_y_unico_al_crear_usuarios) ... ok
+test_pagina_admin_para_agregar_usuario_carga 
+(usuarios.tests.RecuperacionContrasenaTest.test_pagina_admin_para_agregar_usuario_carga) ... ok
+test_solicitud_envia_enlace_de_un_solo_uso 
+(usuarios.tests.RecuperacionContrasenaTest.test_solicitud_envia_enlace_de_un_solo_uso) ... ok
+
+----------------------------------------------------------------------
+Ran 75 tests in 1.684s
+
+OK
+Destroying test database for alias 'default' 
+('C:\Users\maira\OneDrive\Escritorio\Claude\Proyecto-Capstone\tmp\selenium\test_neuroficha_selenium.sqlite3')...
+
+  Applying usuarios.0008_usuario_correo_verificado_and_more... OK
+System check identified no issues (0 silenced).

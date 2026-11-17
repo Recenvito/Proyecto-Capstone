@@ -108,7 +108,7 @@ class Paciente(models.Model):
             meses -= 1
         if meses < 24:
             return f'{meses} meses'
-        return f'{self.edad} anios'
+        return f'{self.edad} años'
 
     @property
     def tutor_principal(self):

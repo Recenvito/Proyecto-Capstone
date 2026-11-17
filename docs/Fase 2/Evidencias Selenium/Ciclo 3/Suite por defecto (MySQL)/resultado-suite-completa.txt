@@ -1,0 +1,20 @@
+﻿venv\Scripts\python : Creating test database for alias 'default'...
+En línea: 15 Carácter: 1
++ venv\Scripts\python manage.py test --noinput *> "$base\Suite por defe ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...as 'default'...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+.....................................................................................[17/Nov/2026 20:05:44,817] - 
+Broken pipe from ('127.0.0.1', 51578)
+[17/Nov/2026 20:05:44,817] - Broken pipe from ('127.0.0.1', 63428)
+
+----------------------------------------------------------------------
+Ran 85 tests in 92.128s
+
+OK
+Destroying test database for alias 'default'...
+
+Found 85 test(s).
+System check identified no issues (0 silenced).

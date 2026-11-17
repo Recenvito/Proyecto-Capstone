@@ -60,6 +60,23 @@ class VistasAgendaPorProfesionalTest(TestCase):
         self.assertEqual(respuesta.context['total_pacientes'], 1)
         self.assertEqual(list(respuesta.context['citas_hoy'].values_list('profesional_id', flat=True)), [self.medico.pk])
 
+    def test_inicio_lista_proximas_citas_sin_incluir_las_de_hoy(self):
+        hoy = timezone.localdate()
+        zona = timezone.get_current_timezone()
+        en_tres_dias = Cita.objects.create(
+            paciente=self.paciente_asignado, profesional=self.medico,
+            fecha_hora=timezone.make_aware(datetime.combine(hoy + timedelta(days=3), time(10, 0)), zona),
+            motivo='Control proximo',
+        )
+        Cita.objects.create(
+            paciente=self.paciente_asignado, profesional=self.medico,
+            fecha_hora=timezone.make_aware(datetime.combine(hoy, time(23, 30)), zona),
+            motivo='Hoy, no es proxima',
+        )
+        self.client.force_login(self.medico)
+        respuesta = self.client.get(reverse('inicio'))
+        self.assertEqual(list(respuesta.context['proximas']), [en_tres_dias])
+
     def test_agenda_muestra_citas_aunque_no_haya_horario_y_no_permite_cambiar_medico(self):
         fecha = timezone.localdate() + timedelta(days=3)
         hora = timezone.make_aware(
